@@ -30,7 +30,7 @@ export function ArchiveDetail() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.4 }}
-              className="space-y-1"
+              className="space-y-1.5"
             >
               <span className="font-mono-system text-[10px] tracking-[0.3em] text-[#00e5ff] uppercase">
                 {project.category} // {project.year}
@@ -38,7 +38,7 @@ export function ArchiveDetail() {
               <h2 className="font-display text-4xl sm:text-6xl text-[#f0ece4] tracking-tight">
                 {project.name}
               </h2>
-              <p className="font-mono-system text-xs text-[#8a8a8e] tracking-wider">
+              <p className="font-mono-system text-xs text-[#8a8a8e] tracking-wider max-w-xl">
                 {project.tagline}
               </p>
             </motion.div>
@@ -59,7 +59,7 @@ export function ArchiveDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 my-auto py-8">
             {/* Left Column: Problem & Solution Architecture */}
             <div className="space-y-6 max-w-xl">
-              {/* Problem */}
+              {/* Challenge */}
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
