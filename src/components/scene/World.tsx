@@ -7,6 +7,7 @@ import { CAMERA_CONFIG } from "@/config/camera";
 import { Lighting } from "@/components/world/Lighting";
 import { Environment } from "@/components/world/Environment";
 import { Particles } from "@/components/world/Particles";
+import { Planet } from "@/components/world/Planet";
 import { Station } from "@/components/scene/Station";
 import { CameraController } from "@/components/camera/CameraController";
 import { SceneManager } from "@/components/scene/SceneManager";
@@ -43,6 +44,7 @@ export function World() {
         <Particles />
 
         <Suspense fallback={null}>
+          <Planet />
           <Station />
         </Suspense>
 

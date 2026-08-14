@@ -4,8 +4,9 @@ import dynamic from "next/dynamic";
 import { useAppStore } from "@/store/useAppStore";
 import { usePerformanceStore } from "@/store/usePerformanceStore";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
-import { SITE_IDENTITY, NAVIGATION_ITEMS } from "@/config/navigation";
-import type { ApplicationState } from "@/types";
+import { Navigation } from "@/components/ui/Navigation";
+import { TransitionOverlay } from "@/components/effects/TransitionOverlay";
+import { SITE_IDENTITY } from "@/config/navigation";
 
 // Dynamic import for persistent 3D Canvas (No SSR)
 const World = dynamic(() => import("@/components/scene/World"), {
@@ -13,102 +14,68 @@ const World = dynamic(() => import("@/components/scene/World"), {
 });
 
 export default function Home() {
-  // Initialize real-time FPS monitor
+  // Initialize real-time FPS & quality monitoring
   usePerformanceMonitor();
 
   const currentState = useAppStore((state) => state.currentState);
-  const transition = useAppStore((state) => state.transition);
   const fps = usePerformanceStore((state) => state.fps);
   const qualityTier = usePerformanceStore((state) => state.qualityTier);
-  const particleCount = usePerformanceStore((state) => state.particleCount);
-
-  const handleStateClick = (state: ApplicationState) => {
-    transition(state);
-  };
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-[#0a0a0c]">
-      {/* Layer 1: Persistent 3D World Canvas with Subsystems */}
+      {/* Layer 1: Persistent 3D World Canvas (Station + Planet + Particles + Lighting) */}
       <World />
 
-      {/* Layer 2: Interactive HUD Overlay */}
-      <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-8 font-mono-system text-xs text-[#8a8a8e] z-10">
-        {/* Header */}
+      {/* Layer 2: Transition Overlay */}
+      <TransitionOverlay />
+
+      {/* Layer 3: Editorial HUD Overlay (Restrained 60% World / 25% Typography / 15% UI) */}
+      <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-8 md:p-12 font-mono-system text-xs text-[#8a8a8e] z-10">
+        {/* Top Header Grid */}
         <header className="flex justify-between items-start w-full">
-          <div>
-            <p className="text-[#f0ece4] font-medium tracking-widest">
+          {/* Identity & Coordinates */}
+          <div className="space-y-1">
+            <p className="text-[10px] tracking-[0.3em] text-[#00e5ff] uppercase">
               {SITE_IDENTITY.systemName}
             </p>
-            <p className="opacity-60 text-[10px]">{SITE_IDENTITY.coordinates}</p>
-          </div>
-
-          {/* Telemetry Display */}
-          <div className="text-right glass-panel px-4 py-2 rounded border border-[hsla(0,0%,100%,0.08)]">
-            <p className="text-[#00e5ff] font-medium">SUBSYSTEMS // PHASE 3</p>
-            <div className="flex items-center justify-end gap-3 text-[10px] mt-0.5">
-              <span className="text-[#f0ece4] font-bold">
-                {fps} FPS
-              </span>
-              <span className="opacity-40">|</span>
-              <span className="uppercase text-[#00e5ff]">
-                TIER: {qualityTier}
-              </span>
-              <span className="opacity-40">|</span>
-              <span>
-                PARTICLES: {particleCount}
-              </span>
-            </div>
-          </div>
-        </header>
-
-        {/* Center / Navigation Testing Trigger */}
-        <div className="flex flex-col items-center justify-center text-center space-y-6">
-          <div>
-            <h1 className="font-display text-4xl sm:text-7xl text-[#f0ece4] tracking-tight drop-shadow-lg">
+            <h1 className="font-display text-lg md:text-xl text-[#f0ece4] tracking-tight">
               {SITE_IDENTITY.name}
             </h1>
-            <p className="text-xs tracking-widest text-[#00e5ff] mt-1">
+            <p className="text-[10px] tracking-wider text-[#8a8a8e]">
               {SITE_IDENTITY.role}
             </p>
           </div>
 
-          {/* Quick State Transition Verification Buttons */}
-          <div className="pointer-events-auto flex flex-wrap gap-3 glass-panel px-6 py-3 rounded-full border border-[hsla(0,0%,100%,0.08)]">
-            <button
-              onClick={() => handleStateClick("MISSION_CONTROL")}
-              className={`px-3 py-1.5 rounded text-[11px] transition-colors ${
-                currentState === "MISSION_CONTROL"
-                  ? "bg-[#00e5ff] text-[#0a0a0c] font-semibold"
-                  : "hover:text-[#f0ece4] text-[#8a8a8e]"
-              }`}
-            >
-              OVERVIEW
-            </button>
-            {NAVIGATION_ITEMS.map((item) => {
-              const stateName = item.label as ApplicationState;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleStateClick(stateName)}
-                  className={`px-3 py-1.5 rounded text-[11px] transition-colors ${
-                    currentState === stateName
-                      ? "bg-[#00e5ff] text-[#0a0a0c] font-semibold"
-                      : "hover:text-[#f0ece4] text-[#8a8a8e]"
-                  }`}
-                >
-                  {item.index} {item.label}
-                </button>
-              );
-            })}
+          {/* Telemetry & State Status */}
+          <div className="text-right glass-panel px-4 py-2 rounded-sm border border-[hsla(0,0%,100%,0.06)] backdrop-blur-md">
+            <p className="text-[9px] tracking-[0.25em] text-[#00e5ff] uppercase">
+              STATUS // {currentState}
+            </p>
+            <div className="flex items-center justify-end gap-2.5 text-[10px] mt-0.5">
+              <span className="text-[#f0ece4] font-medium">{fps} FPS</span>
+              <span className="opacity-30">/</span>
+              <span className="uppercase text-[#8a8a8e]">{qualityTier} TIER</span>
+            </div>
           </div>
+        </header>
+
+        {/* Center Canvas is 100% Unobstructed to Let the World Breathe */}
+        <div className="flex-1 flex items-center justify-center pointer-events-none">
+          {/* Subtle Ambient Watermark in Center Space */}
+          {currentState === "MISSION_CONTROL" && (
+            <div className="text-center opacity-20 pointer-events-none transform translate-y-24">
+              <p className="font-mono-system text-[9px] tracking-[0.4em] uppercase">
+                ORBITAL OBSERVATION PLATFORM
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
-        <footer className="flex justify-between items-end w-full text-[10px] tracking-wider opacity-60">
-          <div>ORBITAL OBSERVATION STATION</div>
-          <div>ADAPTIVE QUALITY CASCADE ACTIVE</div>
-        </footer>
+        {/* Bottom Floating Navigation is mounted as Layer 4 */}
       </div>
+
+      {/* Layer 4: Minimalist Bottom Navigation */}
+      <Navigation />
     </main>
   );
 }
