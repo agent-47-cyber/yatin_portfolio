@@ -6,6 +6,7 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { IntroOverlay } from "@/components/ui/IntroOverlay";
 import { TransitionOverlay } from "@/components/effects/TransitionOverlay";
 import { ObservatoryContent } from "@/components/about/ObservatoryContent";
+import { ArchiveDetail } from "@/components/projects/ArchiveDetail";
 import { HUD } from "@/components/ui/HUD";
 import { Navigation } from "@/components/ui/Navigation";
 import { CustomCursor } from "@/components/ui/CustomCursor";
@@ -36,13 +37,16 @@ export default function Home() {
       {/* Layer 5: Observatory Section Content Overlay */}
       <ObservatoryContent />
 
-      {/* Layer 6: Station Telemetry HUD */}
+      {/* Layer 6: Archive Project Detail Overlay */}
+      <ArchiveDetail />
+
+      {/* Layer 7: Station Telemetry HUD */}
       <HUD />
 
-      {/* Layer 7: Minimalist Bottom Navigation */}
+      {/* Layer 8: Minimalist Bottom Navigation */}
       <Navigation />
 
-      {/* Layer 8: Smooth Lerping Custom Cursor */}
+      {/* Layer 9: Smooth Lerping Custom Cursor */}
       <CustomCursor />
     </main>
   );

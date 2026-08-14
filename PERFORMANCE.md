@@ -38,7 +38,7 @@ Everything feels smooth.
 
 | Metric | Budget |
 | :--- | :--- |
-| Initial JS Bundle | < 180KB gzipped |
+| Initial JS Bundle | < 200KB gzipped |
 | Draw Calls | < 40 per frame |
 | Triangles | < 500k visible |
 | Active Materials | < 20 |

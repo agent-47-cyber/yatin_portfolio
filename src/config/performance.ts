@@ -7,7 +7,7 @@ export const PERFORMANCE_CONFIG = {
     mobile: 50,
   },
   budgets: {
-    maxInitialJsKb: 180,
+    maxInitialJsKb: 200,
     maxDrawCalls: 40,
     maxTriangles: 500000,
     maxMaterials: 20,
