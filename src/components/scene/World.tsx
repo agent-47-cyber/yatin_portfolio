@@ -9,6 +9,7 @@ import { Environment } from "@/components/world/Environment";
 import { Particles } from "@/components/world/Particles";
 import { Planet } from "@/components/world/Planet";
 import { Station } from "@/components/scene/Station";
+import { Observatory } from "@/components/about/Observatory";
 import { CameraController } from "@/components/camera/CameraController";
 import { SceneManager } from "@/components/scene/SceneManager";
 import { PostProcessing } from "@/components/scene/PostProcessing";
@@ -46,6 +47,7 @@ export function World() {
         <Suspense fallback={null}>
           <Planet />
           <Station />
+          <Observatory />
         </Suspense>
 
         <PostProcessing />
