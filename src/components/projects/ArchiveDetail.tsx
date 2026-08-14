@@ -21,12 +21,17 @@ export function ArchiveDetail() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
           className="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between p-8 md:p-16 max-w-7xl mx-auto w-full select-none"
         >
           {/* Top Header */}
           <div className="flex justify-between items-start pt-12">
-            <div className="space-y-1">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="space-y-1"
+            >
               <span className="font-mono-system text-[10px] tracking-[0.3em] text-[#00e5ff] uppercase">
                 {project.category} // {project.year}
               </span>
@@ -36,15 +41,18 @@ export function ArchiveDetail() {
               <p className="font-mono-system text-xs text-[#8a8a8e] tracking-wider">
                 {project.tagline}
               </p>
-            </div>
+            </motion.div>
 
             {/* Return Button */}
-            <button
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
               onClick={() => selectProject(null)}
               className="pointer-events-auto font-mono-system text-[10px] tracking-[0.2em] text-[#8a8a8e] hover:text-[#00e5ff] px-5 py-2.5 rounded border border-[hsla(0,0%,100%,0.1)] glass-panel transition-all"
             >
               [ RETURN TO ARCHIVE ]
-            </button>
+            </motion.button>
           </div>
 
           {/* Center 2-Column Editorial Grid */}
@@ -52,47 +60,61 @@ export function ArchiveDetail() {
             {/* Left Column: Problem & Solution Architecture */}
             <div className="space-y-6 max-w-xl">
               {/* Problem */}
-              <div className="space-y-2">
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.4 }}
+                className="space-y-2"
+              >
                 <span className="font-mono-system text-[9px] tracking-[0.25em] text-[#8a8a8e] uppercase">
                   THE CHALLENGE
                 </span>
                 <p className="font-sans text-xs md:text-sm text-[#f0ece4] leading-relaxed">
                   {project.problem}
                 </p>
-              </div>
+              </motion.div>
 
               {/* Solution */}
-              <div className="space-y-2">
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="space-y-2"
+              >
                 <span className="font-mono-system text-[9px] tracking-[0.25em] text-[#00e5ff] uppercase">
                   ENGINEERED SOLUTION
                 </span>
                 <p className="font-sans text-xs md:text-sm text-[#f0ece4] leading-relaxed">
                   {project.solution}
                 </p>
-              </div>
+              </motion.div>
             </div>
 
-            {/* Right Column: Floating Glass Telemetry & Result */}
-            <div className="space-y-6 max-w-md md:ml-auto w-full">
-              {/* Technology Stack */}
+            {/* Right Column: Editorial Technology Stack & Result */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="space-y-6 max-w-md md:ml-auto w-full"
+            >
               <div className="glass-panel p-6 rounded border border-[hsla(0,0%,100%,0.08)] space-y-4">
-                <span className="font-mono-system text-[9px] tracking-[0.25em] text-[#8a8a8e] uppercase block">
-                  SYSTEM ARCHITECTURE & TECH
+                <span className="font-mono-system text-[9px] tracking-[0.25em] text-[#00e5ff] uppercase block">
+                  SYSTEM ARCHITECTURE
                 </span>
-                <div className="flex flex-wrap gap-2">
-                  {project.technology.map((tech, i) => (
-                    <span
-                      key={i}
-                      className="font-mono-system text-[10px] text-[#f0ece4] bg-[hsla(0,0%,100%,0.05)] border border-[hsla(0,0%,100%,0.08)] px-2.5 py-1 rounded-sm"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
 
-                {/* Result */}
+                {/* Editorial Technology List */}
+                <ul className="space-y-1.5 font-mono-system text-xs text-[#f0ece4]">
+                  {project.technology.map((tech, i) => (
+                    <li key={i} className="flex items-center gap-2.5">
+                      <span className="w-1.5 h-[1px] bg-[#00e5ff]" />
+                      <span>{tech}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Measured Result */}
                 <div className="pt-4 border-t border-[hsla(0,0%,100%,0.08)] space-y-1">
-                  <span className="font-mono-system text-[9px] tracking-[0.25em] text-[#00e5ff] uppercase block">
+                  <span className="font-mono-system text-[9px] tracking-[0.25em] text-[#8a8a8e] uppercase block">
                     MEASURED OUTCOME
                   </span>
                   <p className="font-sans text-xs text-[#8a8a8e] leading-normal">
@@ -100,11 +122,16 @@ export function ArchiveDetail() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Bottom Action Links */}
-          <div className="flex justify-between items-end pb-8 border-t border-[hsla(0,0%,100%,0.08)] pt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75, duration: 0.4 }}
+            className="flex justify-between items-end pb-8 border-t border-[hsla(0,0%,100%,0.08)] pt-6"
+          >
             <div className="flex items-center gap-4 pointer-events-auto">
               {project.liveUrl && (
                 <a
@@ -131,7 +158,7 @@ export function ArchiveDetail() {
             <div className="font-mono-system text-[9px] text-[#8a8a8e] tracking-wider opacity-60">
               ORBITAL ARCHIVE // REPOSITORY 02
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

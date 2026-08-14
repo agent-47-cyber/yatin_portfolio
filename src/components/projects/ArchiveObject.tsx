@@ -40,26 +40,27 @@ export function ArchiveObject({
     if (!groupRef.current) return;
 
     const elapsed = clock.getElapsedTime();
-    const floatSpeed = isSelected ? 0.3 : isHovered ? 1.5 : 0.8;
-    const floatAmp = isSelected ? 0.05 : isHovered ? 0.15 : 0.08;
+    const floatSpeed = isSelected ? 0.3 : isHovered ? 1.2 : 0.6;
+    const floatAmp = isSelected ? 0.04 : isHovered ? 0.1 : 0.06;
 
     groupRef.current.position.y = position[1] + Math.sin(elapsed * floatSpeed) * floatAmp;
 
     if (coreRef.current) {
-      coreRef.current.rotation.y += delta * (isHovered ? 0.8 : 0.3);
-      coreRef.current.rotation.x += delta * (isHovered ? 0.4 : 0.15);
+      coreRef.current.rotation.y += delta * (isHovered ? 0.6 : 0.25);
+      coreRef.current.rotation.x += delta * (isHovered ? 0.3 : 0.12);
     }
     if (ring1Ref.current) {
-      ring1Ref.current.rotation.z += delta * (isHovered ? 0.9 : 0.4);
+      ring1Ref.current.rotation.z += delta * (isHovered ? 0.7 : 0.3);
     }
     if (ring2Ref.current) {
-      ring2Ref.current.rotation.y -= delta * (isHovered ? 0.7 : 0.3);
+      ring2Ref.current.rotation.y -= delta * (isHovered ? 0.5 : 0.2);
     }
   });
 
-  const scale = isSelected ? 1.4 : isHovered ? 1.15 : 1.0;
-  const targetZ = isSelected ? 0.5 : isHovered ? position[2] + 0.6 : position[2];
-  const opacity = isDimmed ? 0.15 : isHovered || isSelected ? 1.0 : 0.85;
+  // Restrained scale (1.04x) and forward movement (+0.45 Z) for physical weight
+  const scale = isSelected ? 1.3 : isHovered ? 1.04 : 1.0;
+  const targetZ = isSelected ? 0.4 : isHovered ? position[2] + 0.45 : position[2];
+  const emissiveMultiplier = isHovered || isSelected ? 1.8 : isDimmed ? 0.4 : 0.9;
 
   return (
     <group
@@ -82,7 +83,7 @@ export function ArchiveObject({
       {/* 1. COMPUTATIONAL CORE (DevScope) */}
       {project.objectType === "computational" && (
         <group>
-          {/* Glass Outer Containment Sphere */}
+          {/* Glass Outer Containment Sphere - Fully Opaque Material */}
           <mesh castShadow receiveShadow>
             <sphereGeometry args={[1.2, 32, 32]} />
             <meshPhysicalMaterial
@@ -91,7 +92,7 @@ export function ArchiveObject({
               roughness={materials.glass.roughness}
               thickness={1.2}
               transparent
-              opacity={opacity}
+              opacity={0.92}
             />
           </mesh>
 
@@ -101,7 +102,7 @@ export function ArchiveObject({
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
-              emissiveIntensity={isHovered || isSelected ? 1.2 : 0.5}
+              emissiveIntensity={0.6 * emissiveMultiplier}
             />
           </mesh>
 
@@ -117,7 +118,7 @@ export function ArchiveObject({
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
-              emissiveIntensity={isHovered || isSelected ? 2.0 : 0.8}
+              emissiveIntensity={1.2 * emissiveMultiplier}
             />
           </mesh>
         </group>
@@ -132,7 +133,7 @@ export function ArchiveObject({
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
-              emissiveIntensity={isHovered || isSelected ? 1.5 : 0.6}
+              emissiveIntensity={0.7 * emissiveMultiplier}
               wireframe
             />
           </mesh>
@@ -143,7 +144,7 @@ export function ArchiveObject({
             <meshStandardMaterial
               color="#f0ece4"
               emissive={accentColor}
-              emissiveIntensity={0.8}
+              emissiveIntensity={0.6 * emissiveMultiplier}
               metalness={0.9}
             />
           </mesh>
@@ -160,7 +161,7 @@ export function ArchiveObject({
                 <meshStandardMaterial
                   color={accentColor}
                   emissive={accentColor}
-                  emissiveIntensity={1.8}
+                  emissiveIntensity={1.4 * emissiveMultiplier}
                 />
               </mesh>
             );
@@ -188,7 +189,7 @@ export function ArchiveObject({
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
-              emissiveIntensity={isHovered || isSelected ? 1.4 : 0.7}
+              emissiveIntensity={0.8 * emissiveMultiplier}
             />
           </mesh>
 
@@ -212,7 +213,7 @@ export function ArchiveObject({
                 transmission={0.8}
                 roughness={0.1}
                 transparent
-                opacity={opacity}
+                opacity={0.85}
               />
             </mesh>
           ))}
@@ -233,19 +234,19 @@ export function ArchiveObject({
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
-              emissiveIntensity={isHovered || isSelected ? 1.6 : 0.7}
+              emissiveIntensity={0.9 * emissiveMultiplier}
             />
           </mesh>
         </group>
       )}
 
-      {/* Minimal Project Index Hologram Badge */}
+      {/* Minimal Project Index Indicator */}
       <mesh position={[0, -1.6, 0]}>
         <ringGeometry args={[0.1, 0.9, 32]} />
         <meshBasicMaterial
           color={accentColor}
           transparent
-          opacity={isHovered || isSelected ? 0.4 : 0.1}
+          opacity={isHovered || isSelected ? 0.5 : 0.15}
           depthWrite={false}
         />
       </mesh>

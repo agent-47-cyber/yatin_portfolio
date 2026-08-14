@@ -11,6 +11,7 @@ import { Planet } from "@/components/world/Planet";
 import { Station } from "@/components/scene/Station";
 import { Observatory } from "@/components/about/Observatory";
 import { Archive } from "@/components/projects/Archive";
+import { OrbitalHistory } from "@/components/experience/OrbitalHistory";
 import { CameraController } from "@/components/camera/CameraController";
 import { SceneManager } from "@/components/scene/SceneManager";
 import { PostProcessing } from "@/components/scene/PostProcessing";
@@ -50,6 +51,7 @@ export function World() {
           <Station />
           <Observatory />
           <Archive />
+          <OrbitalHistory />
         </Suspense>
 
         <PostProcessing />

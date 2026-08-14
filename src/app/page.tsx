@@ -7,6 +7,7 @@ import { IntroOverlay } from "@/components/ui/IntroOverlay";
 import { TransitionOverlay } from "@/components/effects/TransitionOverlay";
 import { ObservatoryContent } from "@/components/about/ObservatoryContent";
 import { ArchiveDetail } from "@/components/projects/ArchiveDetail";
+import { OrbitalHistoryContent } from "@/components/experience/OrbitalHistoryContent";
 import { HUD } from "@/components/ui/HUD";
 import { Navigation } from "@/components/ui/Navigation";
 import { CustomCursor } from "@/components/ui/CustomCursor";
@@ -40,13 +41,16 @@ export default function Home() {
       {/* Layer 6: Archive Project Detail Overlay */}
       <ArchiveDetail />
 
-      {/* Layer 7: Station Telemetry HUD */}
+      {/* Layer 7: Orbital History Experience Overlay */}
+      <OrbitalHistoryContent />
+
+      {/* Layer 8: Station Telemetry HUD */}
       <HUD />
 
-      {/* Layer 8: Minimalist Bottom Navigation */}
+      {/* Layer 9: Minimalist Bottom Navigation */}
       <Navigation />
 
-      {/* Layer 9: Smooth Lerping Custom Cursor */}
+      {/* Layer 10: Smooth Lerping Custom Cursor */}
       <CustomCursor />
     </main>
   );
