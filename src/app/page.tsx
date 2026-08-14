@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/store/useAppStore";
+import { usePerformanceStore } from "@/store/usePerformanceStore";
+import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 import { SITE_IDENTITY, NAVIGATION_ITEMS } from "@/config/navigation";
 import type { ApplicationState } from "@/types";
 
@@ -11,8 +13,14 @@ const World = dynamic(() => import("@/components/scene/World"), {
 });
 
 export default function Home() {
+  // Initialize real-time FPS monitor
+  usePerformanceMonitor();
+
   const currentState = useAppStore((state) => state.currentState);
   const transition = useAppStore((state) => state.transition);
+  const fps = usePerformanceStore((state) => state.fps);
+  const qualityTier = usePerformanceStore((state) => state.qualityTier);
+  const particleCount = usePerformanceStore((state) => state.particleCount);
 
   const handleStateClick = (state: ApplicationState) => {
     transition(state);
@@ -20,7 +28,7 @@ export default function Home() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-[#0a0a0c]">
-      {/* Layer 1: Persistent 3D World Canvas */}
+      {/* Layer 1: Persistent 3D World Canvas with Subsystems */}
       <World />
 
       {/* Layer 2: Interactive HUD Overlay */}
@@ -33,13 +41,27 @@ export default function Home() {
             </p>
             <p className="opacity-60 text-[10px]">{SITE_IDENTITY.coordinates}</p>
           </div>
-          <div className="text-right">
-            <p className="text-[#00e5ff] font-medium">PERSISTENT 3D CORE // PHASE 2</p>
-            <p className="opacity-60 text-[10px]">CURRENT STATE: {currentState}</p>
+
+          {/* Telemetry Display */}
+          <div className="text-right glass-panel px-4 py-2 rounded border border-[hsla(0,0%,100%,0.08)]">
+            <p className="text-[#00e5ff] font-medium">SUBSYSTEMS // PHASE 3</p>
+            <div className="flex items-center justify-end gap-3 text-[10px] mt-0.5">
+              <span className="text-[#f0ece4] font-bold">
+                {fps} FPS
+              </span>
+              <span className="opacity-40">|</span>
+              <span className="uppercase text-[#00e5ff]">
+                TIER: {qualityTier}
+              </span>
+              <span className="opacity-40">|</span>
+              <span>
+                PARTICLES: {particleCount}
+              </span>
+            </div>
           </div>
         </header>
 
-        {/* Center / Navigation Testing Trigger for Phase 2 Verification */}
+        {/* Center / Navigation Testing Trigger */}
         <div className="flex flex-col items-center justify-center text-center space-y-6">
           <div>
             <h1 className="font-display text-4xl sm:text-7xl text-[#f0ece4] tracking-tight drop-shadow-lg">
@@ -84,7 +106,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="flex justify-between items-end w-full text-[10px] tracking-wider opacity-60">
           <div>ORBITAL OBSERVATION STATION</div>
-          <div>60 FPS PERSISTENT WORLD</div>
+          <div>ADAPTIVE QUALITY CASCADE ACTIVE</div>
         </footer>
       </div>
     </main>

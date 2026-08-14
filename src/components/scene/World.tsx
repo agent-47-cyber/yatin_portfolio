@@ -6,20 +6,26 @@ import { PerspectiveCamera } from "@react-three/drei";
 import { CAMERA_CONFIG } from "@/config/camera";
 import { Lighting } from "@/components/world/Lighting";
 import { Environment } from "@/components/world/Environment";
+import { Particles } from "@/components/world/Particles";
 import { Station } from "@/components/scene/Station";
 import { CameraController } from "@/components/camera/CameraController";
+import { SceneManager } from "@/components/scene/SceneManager";
+import { PostProcessing } from "@/components/scene/PostProcessing";
+import { useAdaptiveQuality } from "@/hooks/useAdaptiveQuality";
 
 export function World() {
+  const { dpr, shadowsEnabled } = useAdaptiveQuality();
+
   return (
     <div className="absolute inset-0 w-full h-full pointer-events-auto">
       <Canvas
-        dpr={[1, 1.8]}
+        dpr={dpr}
         gl={{
           antialias: true,
           alpha: false,
           powerPreference: "high-performance",
         }}
-        shadows
+        shadows={shadowsEnabled}
       >
         {/* Single Persistent Camera */}
         <PerspectiveCamera
@@ -31,12 +37,16 @@ export function World() {
         />
 
         <CameraController />
+        <SceneManager />
         <Lighting />
         <Environment />
+        <Particles />
 
         <Suspense fallback={null}>
           <Station />
         </Suspense>
+
+        <PostProcessing />
       </Canvas>
     </div>
   );
