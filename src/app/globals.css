@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-obsidian: #0a0a0c;
+    --color-warm-white: #f0ece4;
+    --color-soft-silver: #8a8a8e;
+    --color-electric-cyan: #00e5ff;
+    --color-warm-orange: #ff6b2b;
+    --color-glass-bg: hsla(240, 10%, 12%, 0.4);
+    --color-glass-border: hsla(0, 0%, 100%, 0.06);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--color-obsidian);
+    color: var(--color-warm-white);
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom selection */
+  ::selection {
+    background-color: var(--color-electric-cyan);
+    color: var(--color-obsidian);
+  }
+}
+
+/* Typography Utility Classes */
+.font-display {
+  font-family: var(--font-syne), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.font-heading {
+  font-family: var(--font-syne), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.font-mono-system {
+  font-family: var(--font-jetbrains-mono), monospace;
+  letter-spacing: 0.1em;
+}
+
+/* Glassmorphic Panel Utility */
+.glass-panel {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
