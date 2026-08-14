@@ -6,10 +6,10 @@ import { PROJECTS_DATA } from "@/data/projects";
 import { ArchiveObject } from "@/components/projects/ArchiveObject";
 
 const ARTIFACT_POSITIONS: Array<[number, number, number]> = [
-  [-4.6, 0.1, -0.5],
-  [-1.5, 0.2, 0.6],
-  [1.5, -0.2, 0.6],
-  [4.6, 0.1, -0.5],
+  [-4.2, 0, 0],
+  [-1.4, 0.15, 0.4],
+  [1.4, -0.15, 0.4],
+  [4.2, 0, 0],
 ];
 
 export function Archive() {
@@ -20,16 +20,12 @@ export function Archive() {
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  const isArchiveVisible =
+  const isArchiveActive =
     currentState === "PROJECTS" || currentState === "PROJECT_DETAIL";
 
-  if (!isArchiveVisible && currentState !== "MISSION_CONTROL") {
-    // Dimmed / hidden when in other sections
-    return null;
-  }
-
+  // Positioned in the Lower Research Docking Bay Sector
   return (
-    <group position={[0, 0.5, 0]}>
+    <group position={[0, -12, -2]}>
       {PROJECTS_DATA.map((project, index) => {
         const isSelected = selectedProjectId === project.id;
         const isHovered = hoveredId === project.id;
@@ -48,16 +44,19 @@ export function Archive() {
             position={position}
             isHovered={isHovered}
             isSelected={isSelected}
-            isDimmed={isDimmed}
+            isDimmed={isDimmed || !isArchiveActive}
             onPointerEnter={() => {
+              if (!isArchiveActive) return;
               setHoveredId(project.id);
               setActiveHover(project.id);
             }}
             onPointerLeave={() => {
+              if (!isArchiveActive) return;
               setHoveredId(null);
               setActiveHover(null);
             }}
             onClick={() => {
+              if (!isArchiveActive) return;
               selectProject(project.id);
             }}
           />

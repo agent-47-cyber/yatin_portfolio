@@ -7,9 +7,9 @@ import { OrbitRing } from "@/components/experience/OrbitRing";
 import { OrbitNode } from "@/components/experience/OrbitNode";
 
 const WAYPOINT_POSITIONS: Array<[number, number, number]> = [
-  [3.6, 0.4, 0],
-  [0, 1.2, 3.8],
-  [-3.6, -0.6, -1.2],
+  [2.6, 0.3, 0],
+  [0, 0.8, 2.4],
+  [-2.6, -0.4, -0.8],
 ];
 
 export function OrbitalHistory() {
@@ -21,14 +21,11 @@ export function OrbitalHistory() {
     EXPERIENCE_DATA[0].id
   );
 
-  const isVisible = currentState === "EXPERIENCE" || currentState === "MISSION_CONTROL";
+  const isExperienceActive = currentState === "EXPERIENCE";
 
-  if (!isVisible) {
-    return null;
-  }
-
+  // Positioned on the Right Flank Sector
   return (
-    <group position={[8.5, 0, 0]}>
+    <group position={[16, 0, -2]}>
       {/* Orbital Trajectory Path */}
       <OrbitRing />
 
@@ -43,17 +40,20 @@ export function OrbitalHistory() {
             key={exp.id}
             experience={exp}
             position={position}
-            isActive={isActive}
-            isHovered={isHovered}
+            isActive={isActive && isExperienceActive}
+            isHovered={isHovered && isExperienceActive}
             onPointerEnter={() => {
+              if (!isExperienceActive) return;
               setHoveredId(exp.id);
               setActiveHover(exp.id);
             }}
             onPointerLeave={() => {
+              if (!isExperienceActive) return;
               setHoveredId(null);
               setActiveHover(null);
             }}
             onClick={() => {
+              if (!isExperienceActive) return;
               setActiveWaypointId(exp.id);
             }}
           />

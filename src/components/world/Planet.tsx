@@ -9,49 +9,39 @@ export function Planet() {
   const planetRef = useRef<Mesh>(null);
   const atmosphereRef = useRef<Mesh>(null);
 
-  // Very slow planetary rotation
+  // Very slow planetary axial rotation
   useFrame((_, delta) => {
     if (planetRef.current) {
       planetRef.current.rotation.y += delta * 0.003;
     }
   });
 
+  const { colors } = DESIGN_SYSTEM;
+
   return (
-    <group position={[0, -58, -30]}>
-      {/* Massive Distant Planet Body */}
+    <group position={[0, -95, -85]}>
+      {/* 1. Distant Dark Planetary Body */}
       <mesh ref={planetRef} receiveShadow>
-        <sphereGeometry args={[50, 64, 64]} />
+        <sphereGeometry args={[80, 64, 64]} />
         <meshStandardMaterial
-          color="#0c0e14"
-          roughness={0.9}
+          color="#06070a"
+          roughness={0.95}
           metalness={0.1}
+          emissive="#00141f"
+          emissiveIntensity={0.08}
         />
       </mesh>
 
-      {/* Atmospheric Rim Glow */}
-      <mesh ref={atmosphereRef} scale={1.015}>
-        <sphereGeometry args={[50, 48, 48]} />
+      {/* 2. Delicate Atmospheric Rim Glow Horizon */}
+      <mesh ref={atmosphereRef}>
+        <sphereGeometry args={[80.8, 64, 64]} />
         <meshStandardMaterial
-          color={DESIGN_SYSTEM.colors.electricCyan}
-          emissive={DESIGN_SYSTEM.colors.electricCyan}
-          emissiveIntensity={0.25}
-          roughness={1.0}
+          color={colors.electricCyan}
+          emissive={colors.electricCyan}
+          emissiveIntensity={0.3}
           transparent
-          opacity={0.18}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Warm Sunlit Terminator Rim */}
-      <mesh scale={1.02} rotation={[0.4, 0.8, 0]}>
-        <sphereGeometry args={[50, 32, 32]} />
-        <meshStandardMaterial
-          color={DESIGN_SYSTEM.colors.warmOrange}
-          emissive={DESIGN_SYSTEM.colors.warmOrange}
-          emissiveIntensity={0.12}
-          transparent
-          opacity={0.08}
-          depthWrite={false}
+          opacity={0.12}
+          roughness={0.8}
         />
       </mesh>
     </group>

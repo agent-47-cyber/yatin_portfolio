@@ -18,26 +18,38 @@ export function Lighting() {
   useFrame((_, delta) => {
     const lerpSpeed = delta * 2.5;
 
-    // Mood targets based on active section
-    let targetAmbient = 0.35;
-    let targetKey = 1.1;
-    let targetPoint = 0.8;
+    // Default Mission Control values
+    let targetAmbient = 0.25;
+    let targetKey = 1.0;
+    let targetPoint = 0.6;
+    let pointX = 0;
+    let pointY = 2;
+    let pointZ = 6;
 
     if (currentState === "ABOUT") {
-      // Warm, crystalline, soft reflections for glass observatory
-      targetAmbient = 0.45;
-      targetKey = 1.3;
-      targetPoint = 1.2;
-    } else if (currentState === "PROJECTS" || currentState === "PROJECT_DETAIL") {
-      // High contrast, deep obsidian shadows for collectible artifacts
-      targetAmbient = 0.25;
-      targetKey = 1.4;
-      targetPoint = 1.0;
-    } else if (currentState === "EXPERIENCE") {
-      // Luminous orbital glow and rim lighting
+      // Focused lighting on Left Observatory
       targetAmbient = 0.35;
+      targetKey = 1.1;
+      targetPoint = 1.2;
+      pointX = -16;
+      pointY = 1;
+      pointZ = 3;
+    } else if (currentState === "PROJECTS" || currentState === "PROJECT_DETAIL") {
+      // Focused lighting on Lower Research Archive
+      targetAmbient = 0.2;
       targetKey = 1.2;
-      targetPoint = 1.5;
+      targetPoint = 1.0;
+      pointX = 0;
+      pointY = -12;
+      pointZ = 3;
+    } else if (currentState === "EXPERIENCE") {
+      // Focused lighting on Right Orbital History
+      targetAmbient = 0.3;
+      targetKey = 1.1;
+      targetPoint = 1.2;
+      pointX = 16;
+      pointY = 1;
+      pointZ = 3;
     }
 
     if (ambientRef.current) {
@@ -51,20 +63,26 @@ export function Lighting() {
     if (pointLightRef.current) {
       pointLightRef.current.intensity +=
         (targetPoint - pointLightRef.current.intensity) * lerpSpeed;
+      pointLightRef.current.position.x +=
+        (pointX - pointLightRef.current.position.x) * lerpSpeed;
+      pointLightRef.current.position.y +=
+        (pointY - pointLightRef.current.position.y) * lerpSpeed;
+      pointLightRef.current.position.z +=
+        (pointZ - pointLightRef.current.position.z) * lerpSpeed;
     }
   });
 
   return (
     <>
-      {/* Dynamic Ambient Base Light */}
-      <ambientLight ref={ambientRef} color="#0d111a" intensity={0.35} />
+      {/* Deep Obsidian Ambient Base */}
+      <ambientLight ref={ambientRef} color="#080a10" intensity={0.25} />
 
       {/* Primary Key Directional Sun Light with Shadows */}
       <directionalLight
         ref={keyLightRef}
-        position={[18, 22, 14]}
-        intensity={1.1}
-        color="#f4f6ff"
+        position={[20, 25, 15]}
+        intensity={1.0}
+        color="#f0f3fa"
         castShadow={shadowsEnabled}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
@@ -74,18 +92,11 @@ export function Lighting() {
       {/* Dynamic Contextual Emissive Accent Point Light */}
       <pointLight
         ref={pointLightRef}
-        position={[-6, 4, 6]}
-        intensity={0.8}
+        position={[0, 2, 6]}
+        intensity={0.6}
         color="#00e5ff"
-        distance={35}
+        distance={25}
         decay={2}
-      />
-
-      {/* Subtle Warm Secondary Rim Light */}
-      <directionalLight
-        position={[-15, -10, -12]}
-        intensity={0.4}
-        color="#d4b483"
       />
     </>
   );
