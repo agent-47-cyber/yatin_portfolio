@@ -8,11 +8,11 @@ import {
   type IntroTimelineElements,
 } from "@/motion/timeline/intro";
 import { SITE_IDENTITY } from "@/config/navigation";
+import { AudioEngine } from "@/lib/audio";
 
 export function IntroOverlay() {
   const currentState = useAppStore((state) => state.currentState);
   const skipIntro = useAppStore((state) => state.skipIntro);
-  const setIntroComplete = useAppStore((state) => state.setIntroComplete);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const systemLabelRef = useRef<HTMLParagraphElement>(null);
@@ -40,6 +40,7 @@ export function IntroOverlay() {
       skipButton: skipButtonRef.current,
     };
 
+    AudioEngine.playTransition();
     killIntroTimeline(timelineRef.current, elements);
     skipIntro();
   };
@@ -63,14 +64,11 @@ export function IntroOverlay() {
       skipButton: skipButtonRef.current,
     };
 
-    const tl = createIntroTimeline(elements, () => {
-      // Auto complete or stay waiting for user click
-    });
-
+    const tl = createIntroTimeline(elements);
     timelineRef.current = tl;
     tl.play();
 
-    // Global keydown listener for instant skip (Escape / Enter / Space)
+    // Global keydown listener for instant entry (Escape / Enter / Space)
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -93,7 +91,7 @@ export function IntroOverlay() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-40 bg-[#0a0a0c]/85 backdrop-blur-sm flex flex-col justify-between p-8 md:p-12 font-mono-system text-xs text-[#8a8a8e] select-none"
+      className="fixed inset-0 z-40 bg-[#0a0a0c]/90 backdrop-blur-md flex flex-col justify-between p-8 md:p-12 font-mono-system text-xs text-[#8a8a8e] select-none transition-opacity duration-700"
     >
       {/* Top Header */}
       <div className="flex justify-between items-start">
@@ -106,7 +104,7 @@ export function IntroOverlay() {
         <button
           ref={skipButtonRef}
           onClick={handleSkip}
-          className="opacity-0 text-[10px] tracking-widest text-[#8a8a8e] hover:text-[#00e5ff] transition-colors pointer-events-auto"
+          className="opacity-0 text-[10px] tracking-widest text-[#8a8a8e] hover:text-[#00e5ff] transition-colors pointer-events-auto focus:outline-none"
         >
           [ SKIP INTRO ]
         </button>
@@ -119,7 +117,7 @@ export function IntroOverlay() {
           ref={statusLabelRef}
           className="text-[11px] tracking-[0.25em] text-[#00e5ff] opacity-0"
         >
-          INITIALIZING CORE TELEMETRY...
+          ORBITAL TELEMETRY SYNCHRONIZED
         </p>
 
         {/* Scan Line */}
@@ -156,7 +154,7 @@ export function IntroOverlay() {
           <button
             ref={enterButtonRef}
             onClick={handleEnter}
-            className="opacity-0 pointer-events-auto px-8 py-3 rounded-full border border-[#00e5ff]/40 bg-[#00e5ff]/10 text-[#00e5ff] hover:bg-[#00e5ff] hover:text-[#0a0a0c] font-semibold text-xs tracking-[0.2em] transition-all duration-300 shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_30px_#00e5ff]"
+            className="opacity-0 pointer-events-auto px-8 py-3 rounded-full border border-[#00e5ff]/40 bg-[#00e5ff]/10 text-[#00e5ff] hover:bg-[#00e5ff] hover:text-[#0a0a0c] font-semibold text-xs tracking-[0.2em] transition-all duration-300 shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_30px_#00e5ff] focus:outline-none"
           >
             [ ENTER STATION ]
           </button>
@@ -166,7 +164,7 @@ export function IntroOverlay() {
       {/* Bottom Status */}
       <div className="flex justify-between items-end text-[9px] tracking-wider opacity-40">
         <div>ORBITAL OBSERVATION PLATFORM</div>
-        <div>PRESS ANY KEY TO SKIP</div>
+        <div>PRESS ANY KEY TO ENTER</div>
       </div>
     </div>
   );

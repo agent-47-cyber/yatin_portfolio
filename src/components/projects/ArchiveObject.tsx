@@ -31,36 +31,48 @@ export function ArchiveObject({
   const coreRef = useRef<Mesh>(null);
   const ring1Ref = useRef<Mesh>(null);
   const ring2Ref = useRef<Mesh>(null);
+  const shellLeftRef = useRef<Mesh>(null);
+  const shellRightRef = useRef<Mesh>(null);
 
   const { colors, materials } = DESIGN_SYSTEM;
   const accentColor = project.accentColor || colors.electricCyan;
 
-  // Continuous per-frame mechanical rotation & hover floating (Zero allocations)
+  // Mechanical rotation & unfolding state transition
   useFrame(({ clock }, delta) => {
     if (!groupRef.current) return;
 
     const elapsed = clock.getElapsedTime();
-    const floatSpeed = isSelected ? 0.3 : isHovered ? 1.2 : 0.6;
-    const floatAmp = isSelected ? 0.04 : isHovered ? 0.1 : 0.06;
+    const floatSpeed = isSelected ? 0.3 : isHovered ? 1.0 : 0.5;
+    const floatAmp = isSelected ? 0.03 : isHovered ? 0.08 : 0.04;
 
     groupRef.current.position.y = position[1] + Math.sin(elapsed * floatSpeed) * floatAmp;
 
     if (coreRef.current) {
-      coreRef.current.rotation.y += delta * (isHovered ? 0.6 : 0.25);
-      coreRef.current.rotation.x += delta * (isHovered ? 0.3 : 0.12);
+      coreRef.current.rotation.y += delta * (isHovered ? 0.5 : 0.2);
+      coreRef.current.rotation.x += delta * (isHovered ? 0.25 : 0.1);
     }
     if (ring1Ref.current) {
-      ring1Ref.current.rotation.z += delta * (isHovered ? 0.7 : 0.3);
+      ring1Ref.current.rotation.z += delta * (isHovered ? 0.6 : 0.25);
     }
     if (ring2Ref.current) {
-      ring2Ref.current.rotation.y -= delta * (isHovered ? 0.5 : 0.2);
+      ring2Ref.current.rotation.y -= delta * (isHovered ? 0.4 : 0.15);
+    }
+
+    // Mechanical unfolding expansion when selected
+    const targetShellOffset = isSelected ? 0.35 : 0;
+    if (shellLeftRef.current) {
+      shellLeftRef.current.position.x +=
+        (-targetShellOffset - shellLeftRef.current.position.x) * (delta * 4.0);
+    }
+    if (shellRightRef.current) {
+      shellRightRef.current.position.x +=
+        (targetShellOffset - shellRightRef.current.position.x) * (delta * 4.0);
     }
   });
 
-  // Restrained scale (1.04x) and forward movement (+0.45 Z) for physical weight
-  const scale = isSelected ? 1.3 : isHovered ? 1.04 : 1.0;
-  const targetZ = isSelected ? 0.4 : isHovered ? position[2] + 0.45 : position[2];
-  const emissiveMultiplier = isHovered || isSelected ? 1.8 : isDimmed ? 0.4 : 0.9;
+  const scale = isSelected ? 1.25 : isHovered ? 1.04 : 1.0;
+  const targetZ = isSelected ? 0.3 : isHovered ? position[2] + 0.35 : position[2];
+  const emissiveMultiplier = isHovered || isSelected ? 1.6 : isDimmed ? 0.3 : 0.8;
 
   return (
     <group
@@ -83,22 +95,32 @@ export function ArchiveObject({
       {/* 1. COMPUTATIONAL CORE (DevScope) */}
       {project.objectType === "computational" && (
         <group>
-          {/* Glass Outer Containment Sphere - Fully Opaque Material */}
+          {/* Glass Outer Containment Sphere */}
           <mesh castShadow receiveShadow>
-            <sphereGeometry args={[1.2, 32, 32]} />
+            <sphereGeometry args={[1.1, 32, 32]} />
             <meshPhysicalMaterial
               color="#ffffff"
               transmission={materials.glass.transmission}
               roughness={materials.glass.roughness}
-              thickness={1.2}
+              thickness={1.1}
               transparent
               opacity={0.92}
             />
           </mesh>
 
-          {/* Gyroscopic Telemetry Ring 1 */}
+          {/* Unfolding Mechanical Protective Shell Petals */}
+          <mesh ref={shellLeftRef} position={[0, 0, 0]}>
+            <cylinderGeometry args={[1.15, 1.15, 0.4, 16, 1, false, 0, Math.PI]} />
+            <meshStandardMaterial color="#1a1c26" metalness={0.9} roughness={0.3} />
+          </mesh>
+          <mesh ref={shellRightRef} position={[0, 0, 0]}>
+            <cylinderGeometry args={[1.15, 1.15, 0.4, 16, 1, false, Math.PI, Math.PI]} />
+            <meshStandardMaterial color="#1a1c26" metalness={0.9} roughness={0.3} />
+          </mesh>
+
+          {/* Gyroscopic Telemetry Rings */}
           <mesh ref={ring1Ref} rotation={[Math.PI / 3, 0, 0]}>
-            <torusGeometry args={[0.85, 0.03, 16, 64]} />
+            <torusGeometry args={[0.75, 0.02, 16, 48]} />
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
@@ -106,15 +128,9 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Gyroscopic Ring 2 */}
-          <mesh ref={ring2Ref} rotation={[-Math.PI / 4, 0, 0]}>
-            <torusGeometry args={[0.65, 0.02, 16, 64]} />
-            <meshStandardMaterial color="#f0ece4" metalness={0.9} roughness={0.2} />
-          </mesh>
-
           {/* Central Pulsing Data Core */}
           <mesh ref={coreRef}>
-            <octahedronGeometry args={[0.35, 1]} />
+            <octahedronGeometry args={[0.3, 1]} />
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
@@ -124,12 +140,12 @@ export function ArchiveObject({
         </group>
       )}
 
-      {/* 2. NEURAL LATTICE (Synapse AI) */}
+      {/* 2. NEURAL LATTICE (Intrusion Shield) */}
       {project.objectType === "neural" && (
         <group>
           {/* Icosahedral Neural Wireframe */}
           <mesh ref={coreRef} castShadow>
-            <icosahedronGeometry args={[1.1, 1]} />
+            <icosahedronGeometry args={[1.0, 1]} />
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
@@ -138,9 +154,9 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Internal Synaptic Core */}
+          {/* Internal Core Node */}
           <mesh ref={ring1Ref}>
-            <dodecahedronGeometry args={[0.5, 0]} />
+            <dodecahedronGeometry args={[0.45, 0]} />
             <meshStandardMaterial
               color="#f0ece4"
               emissive={accentColor}
@@ -148,33 +164,15 @@ export function ArchiveObject({
               metalness={0.9}
             />
           </mesh>
-
-          {/* Orbiting Synapse Node Points */}
-          {[0, 1, 2, 3].map((i) => {
-            const angle = (i * Math.PI) / 2;
-            return (
-              <mesh
-                key={i}
-                position={[Math.cos(angle) * 0.9, Math.sin(angle) * 0.9, 0]}
-              >
-                <sphereGeometry args={[0.06, 12, 12]} />
-                <meshStandardMaterial
-                  color={accentColor}
-                  emissive={accentColor}
-                  emissiveIntensity={1.4 * emissiveMultiplier}
-                />
-              </mesh>
-            );
-          })}
         </group>
       )}
 
-      {/* 3. SECURITY TOPOLOGY (Sentinel Mesh) */}
+      {/* 3. SECURITY TOPOLOGY (SIH Zero-Ballot) */}
       {project.objectType === "topology" && (
         <group>
           {/* Main Octahedral Topology Shell */}
           <mesh ref={coreRef} castShadow>
-            <octahedronGeometry args={[1.15, 0]} />
+            <octahedronGeometry args={[1.05, 0]} />
             <meshStandardMaterial
               color="#1a1c26"
               metalness={0.9}
@@ -183,9 +181,9 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Inner Cyan Coordinate Prism */}
+          {/* Inner Coordinate Prism */}
           <mesh ref={ring1Ref}>
-            <octahedronGeometry args={[0.6, 0]} />
+            <octahedronGeometry args={[0.55, 0]} />
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
@@ -193,21 +191,21 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Protective Orbital Cage */}
+          {/* Outer Ring Cage */}
           <mesh ref={ring2Ref} rotation={[0, 0, Math.PI / 4]}>
-            <torusGeometry args={[0.95, 0.025, 16, 48]} />
+            <torusGeometry args={[0.85, 0.02, 16, 48]} />
             <meshStandardMaterial color="#2d2f3d" metalness={0.9} />
           </mesh>
         </group>
       )}
 
-      {/* 4. ARCHITECTURAL ENGINE (Strata Cloud) */}
+      {/* 4. ARCHITECTURAL ENGINE (ORBIT Engine) */}
       {project.objectType === "architectural" && (
         <group>
-          {/* Layered Translucent Floor Plates */}
-          {[-0.6, 0, 0.6].map((y, i) => (
+          {/* Layered Floor Plates */}
+          {[-0.5, 0, 0.5].map((y, i) => (
             <mesh key={i} position={[0, y, 0]} castShadow>
-              <boxGeometry args={[1.5, 0.08, 1.5]} />
+              <boxGeometry args={[1.3, 0.06, 1.3]} />
               <meshPhysicalMaterial
                 color="#ffffff"
                 transmission={0.8}
@@ -218,19 +216,19 @@ export function ArchiveObject({
             </mesh>
           ))}
 
-          {/* Structural Corner Columns */}
-          {[-0.65, 0.65].map((x, i) =>
-            [-0.65, 0.65].map((z, j) => (
+          {/* Structural Columns */}
+          {[-0.55, 0.55].map((x, i) =>
+            [-0.55, 0.55].map((z, j) => (
               <mesh key={`${i}-${j}`} position={[x, 0, z]}>
-                <cylinderGeometry args={[0.03, 0.03, 1.3, 8]} />
+                <cylinderGeometry args={[0.025, 0.025, 1.1, 8]} />
                 <meshStandardMaterial color="#333544" metalness={0.9} />
               </mesh>
             ))
           )}
 
-          {/* Floating Central Compute Block */}
+          {/* Central Compute Block */}
           <mesh ref={coreRef}>
-            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <boxGeometry args={[0.4, 0.4, 0.4]} />
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
@@ -240,13 +238,13 @@ export function ArchiveObject({
         </group>
       )}
 
-      {/* Minimal Project Index Indicator */}
-      <mesh position={[0, -1.6, 0]}>
-        <ringGeometry args={[0.1, 0.9, 32]} />
+      {/* Minimal Project Datum Halo */}
+      <mesh position={[0, -1.4, 0]}>
+        <ringGeometry args={[0.08, 0.75, 32]} />
         <meshBasicMaterial
           color={accentColor}
           transparent
-          opacity={isHovered || isSelected ? 0.5 : 0.15}
+          opacity={isHovered || isSelected ? 0.45 : 0.1}
           depthWrite={false}
         />
       </mesh>

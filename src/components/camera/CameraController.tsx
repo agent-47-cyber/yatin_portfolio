@@ -7,7 +7,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { CAMERA_CONFIG, CAMERA_WAYPOINTS } from "@/config/camera";
 import { Vector3 } from "three";
 
-// Pre-allocated static vectors to ensure Zero Garbage Collection inside useFrame
+// Pre-allocated static vectors to eliminate GC overhead inside useFrame
 const vLookAt = new Vector3();
 
 export function CameraController() {
@@ -19,8 +19,9 @@ export function CameraController() {
   const mousePosition = useRef({ x: 0, y: 0 });
   const currentParallax = useRef({ x: 0, y: 0 });
   const lookAtTarget = useRef(new Vector3(0, 0, 0));
+  const velocity = useRef(new Vector3(0, 0, 0));
 
-  // Listen to mouse movement for drone parallax
+  // Passive mouse coordinate tracking
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
       mousePosition.current = {
@@ -57,7 +58,7 @@ export function CameraController() {
 
     setTransitioning(true);
 
-    // Drone flight transition: Acceleration -> Coast -> Micro-Overshoot -> Settle
+    // Physical flight curve: Accelerate -> Coast -> Micro-Overshoot -> Settle
     const timeline = gsap.timeline({
       onComplete: () => {
         setTransitioning(false);
@@ -89,30 +90,34 @@ export function CameraController() {
     };
   }, [currentState, selectedProjectId, camera, setTransitioning]);
 
-  // Per-frame idle drone breathing and parallax dampening
+  // Continuous per-frame drone breathing, roll, and inertial parallax
   useFrame(({ clock }, delta) => {
-    // 1. Inertial Parallax Tracking
+    const time = clock.getElapsedTime();
+
+    // 1. Inertial Parallax Tracking with dampening
     const factor = CAMERA_CONFIG.parallaxStrength;
     currentParallax.current.x +=
-      (mousePosition.current.x * factor * 50 - currentParallax.current.x) *
-      (0.05 * delta * 60);
+      (mousePosition.current.x * factor * 60 - currentParallax.current.x) *
+      (0.04 * delta * 60);
     currentParallax.current.y +=
-      (mousePosition.current.y * factor * 50 - currentParallax.current.y) *
-      (0.05 * delta * 60);
+      (mousePosition.current.y * factor * 60 - currentParallax.current.y) *
+      (0.04 * delta * 60);
 
-    // 2. Drone Idle Breathing Drift
-    const time = clock.getElapsedTime();
-    const driftX =
-      Math.sin(time * CAMERA_CONFIG.idleDriftSpeed) *
-      CAMERA_CONFIG.idleDriftAmplitude.x;
-    const driftY =
-      Math.cos(time * CAMERA_CONFIG.idleDriftSpeed) *
-      CAMERA_CONFIG.idleDriftAmplitude.y;
+    // 2. Drone Multi-Axis Idle Sway & Breathing (Never completely frozen)
+    const driftSpeed = CAMERA_CONFIG.idleDriftSpeed;
+    const driftX = Math.sin(time * driftSpeed) * CAMERA_CONFIG.idleDriftAmplitude.x;
+    const driftY = Math.cos(time * driftSpeed * 0.7) * CAMERA_CONFIG.idleDriftAmplitude.y;
+    const driftZ = Math.sin(time * driftSpeed * 0.5) * CAMERA_CONFIG.idleDriftAmplitude.z;
 
-    // Apply lookAt with zero new vector allocations
+    // Apply subtle drone roll on z-axis
+    const droneRoll = Math.sin(time * 0.25) * 0.005 + currentParallax.current.x * -0.015;
+    camera.rotation.z = droneRoll;
+
+    // 3. Apply target lookAt with continuous inertial sway
     vLookAt.copy(lookAtTarget.current);
-    vLookAt.x += currentParallax.current.x + driftX * 0.3;
-    vLookAt.y += currentParallax.current.y + driftY * 0.3;
+    vLookAt.x += currentParallax.current.x + driftX * 0.5;
+    vLookAt.y += currentParallax.current.y + driftY * 0.5;
+    vLookAt.z += driftZ * 0.5;
 
     camera.lookAt(vLookAt);
   });

@@ -9,6 +9,8 @@ import { Environment } from "@/components/world/Environment";
 import { Particles } from "@/components/world/Particles";
 import { Planet } from "@/components/world/Planet";
 import { Station } from "@/components/scene/Station";
+import { Drones } from "@/components/world/Drones";
+import { TelemetryHolo } from "@/components/world/TelemetryHolo";
 import { Observatory } from "@/components/about/Observatory";
 import { Archive } from "@/components/projects/Archive";
 import { OrbitalHistory } from "@/components/experience/OrbitalHistory";
@@ -31,13 +33,13 @@ export function World() {
         }}
         shadows={shadowsEnabled}
       >
-        {/* Single Persistent Camera */}
+        {/* Single Persistent Perspective Camera */}
         <PerspectiveCamera
           makeDefault
           fov={CAMERA_CONFIG.fov}
           near={CAMERA_CONFIG.near}
           far={CAMERA_CONFIG.far}
-          position={[0, 1.8, 14]}
+          position={[0, 1.5, 18]}
         />
 
         <CameraController />
@@ -49,6 +51,8 @@ export function World() {
         <Suspense fallback={null}>
           <Planet />
           <Station />
+          <Drones />
+          <TelemetryHolo />
           <Observatory />
           <Archive />
           <OrbitalHistory />
