@@ -1,24 +1,25 @@
 "use client";
 
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Object3D, type InstancedMesh } from "three";
-import { DESIGN_SYSTEM } from "@/DESIGN_SYSTEM";
 import { useAdaptiveQuality } from "@/hooks/useAdaptiveQuality";
+import { Object3D, type InstancedMesh } from "three";
 
-// Static dummy Object3D pre-allocated outside render loop (Zero frame allocations)
+// Pre-allocated static Object3D to eliminate garbage collection inside useFrame
 const dummy = new Object3D();
-const MAX_PARTICLES = DESIGN_SYSTEM.particles.count.high;
 
 export function Particles() {
-  const meshRef = useRef<InstancedMesh>(null);
   const { particleCount } = useAdaptiveQuality();
 
-  // Generate particle coordinate distribution once
-  const particles = useMemo(() => {
+  const starMeshRef = useRef<InstancedMesh>(null);
+  const dustMeshRef = useRef<InstancedMesh>(null);
+
+  // Background Starfield Coordinates
+  const starData = useMemo(() => {
     const data = [];
-    for (let i = 0; i < MAX_PARTICLES; i++) {
-      const radius = 8 + Math.random() * 55;
+    const count = particleCount;
+    for (let i = 0; i < count; i++) {
+      const radius = 60 + Math.random() * 160;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(Math.random() * 2 - 1);
 
@@ -26,58 +27,81 @@ export function Particles() {
       const y = radius * Math.sin(phi) * Math.sin(theta);
       const z = radius * Math.cos(phi);
 
-      const speed = 0.0005 + Math.random() * 0.0015;
-      const scale = 0.4 + Math.random() * 0.8;
+      const scale = 0.04 + Math.random() * 0.12;
+      const speed = 0.01 + Math.random() * 0.03;
 
-      data.push({ x, y, z, speed, scale, radius, angle: theta });
+      data.push({ x, y, z, scale, speed, phase: Math.random() * Math.PI * 2 });
+    }
+    return data;
+  }, [particleCount]);
+
+  // Foreground Micro-Dust Coordinates (Creates spatial parallax depth)
+  const dustData = useMemo(() => {
+    const data = [];
+    const count = 60;
+    for (let i = 0; i < count; i++) {
+      const x = (Math.random() - 0.5) * 35;
+      const y = (Math.random() - 0.5) * 20;
+      const z = (Math.random() - 0.5) * 30;
+      const scale = 0.02 + Math.random() * 0.04;
+      const speed = 0.02 + Math.random() * 0.05;
+
+      data.push({ x, y, z, scale, speed, phase: Math.random() * Math.PI * 2 });
     }
     return data;
   }, []);
 
-  // Update instanced mesh visibility count when quality tier changes
-  useEffect(() => {
-    if (meshRef.current) {
-      meshRef.current.count = particleCount;
-    }
-  }, [particleCount]);
+  // Per-frame multi-plane particle drift
+  useFrame(({ clock }) => {
+    const time = clock.getElapsedTime();
 
-  // Per-frame instance matrix updates via direct mutation
-  useFrame((_, delta) => {
-    if (!meshRef.current) return;
-
-    for (let i = 0; i < particleCount; i++) {
-      const p = particles[i];
-      p.angle += p.speed * delta * 60;
-
-      const currentX = p.x + Math.sin(p.angle) * 0.8;
-      const currentY = p.y + Math.cos(p.angle * 0.7) * 0.8;
-      const currentZ = p.z;
-
-      dummy.position.set(currentX, currentY, currentZ);
-      dummy.scale.set(p.scale, p.scale, p.scale);
-      dummy.updateMatrix();
-
-      meshRef.current.setMatrixAt(i, dummy.matrix);
+    // 1. Background Stars Slow Rotation
+    if (starMeshRef.current) {
+      starData.forEach((star, i) => {
+        const pulse = Math.sin(time * star.speed * 20 + star.phase) * 0.3 + 1;
+        dummy.position.set(star.x, star.y, star.z);
+        dummy.scale.setScalar(star.scale * pulse);
+        dummy.updateMatrix();
+        starMeshRef.current?.setMatrixAt(i, dummy.matrix);
+      });
+      starMeshRef.current.instanceMatrix.needsUpdate = true;
+      starMeshRef.current.rotation.y = time * 0.003;
     }
 
-    meshRef.current.instanceMatrix.needsUpdate = true;
+    // 2. Foreground Floating Dust Parallax
+    if (dustMeshRef.current) {
+      dustData.forEach((dust, i) => {
+        const dy = Math.sin(time * dust.speed + dust.phase) * 0.4;
+        const dx = Math.cos(time * dust.speed * 0.8 + dust.phase) * 0.3;
+        dummy.position.set(dust.x + dx, dust.y + dy, dust.z);
+        dummy.scale.setScalar(dust.scale);
+        dummy.updateMatrix();
+        dustMeshRef.current?.setMatrixAt(i, dummy.matrix);
+      });
+      dustMeshRef.current.instanceMatrix.needsUpdate = true;
+    }
   });
 
   return (
-    <instancedMesh
-      ref={meshRef}
-      args={[undefined, undefined, MAX_PARTICLES]}
-      count={particleCount}
-      frustumCulled={false}
-    >
-      <sphereGeometry args={[DESIGN_SYSTEM.particles.size, 6, 6]} />
-      <meshBasicMaterial
-        color={DESIGN_SYSTEM.colors.electricCyan}
-        transparent
-        opacity={0.65}
-        depthWrite={false}
-      />
-    </instancedMesh>
+    <group>
+      {/* Background Starfield */}
+      <instancedMesh
+        ref={starMeshRef}
+        args={[undefined, undefined, starData.length]}
+      >
+        <sphereGeometry args={[1, 6, 6]} />
+        <meshBasicMaterial color="#f0ece4" />
+      </instancedMesh>
+
+      {/* Foreground Ambient Space Dust */}
+      <instancedMesh
+        ref={dustMeshRef}
+        args={[undefined, undefined, dustData.length]}
+      >
+        <sphereGeometry args={[1, 4, 4]} />
+        <meshBasicMaterial color="#00e5ff" transparent opacity={0.35} />
+      </instancedMesh>
+    </group>
   );
 }
 

@@ -26,14 +26,14 @@ export function CustomCursor() {
     targetY: -100,
   });
 
-  // Touch device detection
+  // Detect touch devices
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsTouchDevice(window.matchMedia("(pointer: coarse)").matches);
     }
   }, []);
 
-  // Mouse coordinate listener
+  // Passive mouse move tracking
   useEffect(() => {
     if (isTouchDevice) return;
 
@@ -48,7 +48,7 @@ export function CustomCursor() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [isTouchDevice]);
 
-  // Direct RAF transform mutation loop (Zero setState)
+  // Physical spring RAF render loop (Zero React state updates)
   useEffect(() => {
     if (isTouchDevice) return;
 
@@ -59,8 +59,9 @@ export function CustomCursor() {
       const delta = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
 
-      updateCursorMotion(dotPosRef.current, delta * 2.5);
-      updateCursorMotion(ringPosRef.current, delta * 1.2);
+      // Fast precision tracking for center dot, smooth inertia for ambient ring
+      updateCursorMotion(dotPosRef.current, delta * 3.5);
+      updateCursorMotion(ringPosRef.current, delta * 1.5);
 
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${dotPosRef.current.currentX}px, ${dotPosRef.current.currentY}px, 0) translate(-50%, -50%)`;
@@ -89,20 +90,20 @@ export function CustomCursor() {
   const isHovering = Boolean(activeHoverId);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden select-none">
       {/* Precision Center Dot */}
       <div
         ref={dotRef}
         className="fixed top-0 left-0 w-1.5 h-1.5 bg-[#00e5ff] rounded-full will-change-transform shadow-[0_0_8px_#00e5ff]"
       />
 
-      {/* Smooth Ambient Ring */}
+      {/* Physical Spring Ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 rounded-full border border-[#00e5ff]/50 will-change-transform transition-all duration-300 ${
+        className={`fixed top-0 left-0 rounded-full border will-change-transform transition-all duration-300 ${
           isHovering
-            ? "w-12 h-12 bg-[#00e5ff]/10 scale-125 border-[#00e5ff]"
-            : "w-7 h-7 scale-100"
+            ? "w-11 h-11 bg-[#00e5ff]/10 scale-120 border-[#00e5ff] shadow-[0_0_15px_rgba(0,229,255,0.3)]"
+            : "w-6 h-6 scale-100 border-[#00e5ff]/40"
         }`}
       />
     </div>
