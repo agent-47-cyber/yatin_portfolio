@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   experimental: {
-    reactCompiler: true,
+    reactCompiler: process.env.NODE_ENV === "production",
   },
 };
 
