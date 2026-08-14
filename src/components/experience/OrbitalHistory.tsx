@@ -7,9 +7,9 @@ import { OrbitRing } from "@/components/experience/OrbitRing";
 import { OrbitNode } from "@/components/experience/OrbitNode";
 
 const WAYPOINT_POSITIONS: Array<[number, number, number]> = [
-  [2.6, 0.3, 0],
-  [0, 0.8, 2.4],
-  [-2.6, -0.4, -0.8],
+  [2.4, 0.4, 0],
+  [0, 0.8, 2.2],
+  [-2.4, -0.4, -0.8],
 ];
 
 export function OrbitalHistory() {
@@ -26,10 +26,10 @@ export function OrbitalHistory() {
   // Positioned on the Right Flank Sector
   return (
     <group position={[16, 0, -2]}>
-      {/* Orbital Trajectory Path */}
+      {/* 3D Career Flight Trajectory Path */}
       <OrbitRing />
 
-      {/* Orbital Waypoint Checkpoints */}
+      {/* Chronological Spacecraft Flight Waypoints */}
       {EXPERIENCE_DATA.map((exp, index) => {
         const isActive = activeWaypointId === exp.id;
         const isHovered = hoveredId === exp.id;

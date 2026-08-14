@@ -29,50 +29,56 @@ export function ArchiveObject({
 }: ArchiveObjectProps) {
   const groupRef = useRef<Group>(null);
   const coreRef = useRef<Mesh>(null);
+  const nodeGroupRef = useRef<Group>(null);
+  const shieldRef = useRef<Mesh>(null);
   const ring1Ref = useRef<Mesh>(null);
   const ring2Ref = useRef<Mesh>(null);
-  const shellLeftRef = useRef<Mesh>(null);
-  const shellRightRef = useRef<Mesh>(null);
 
   const { colors, materials } = DESIGN_SYSTEM;
   const accentColor = project.accentColor || colors.electricCyan;
 
-  // Mechanical rotation & unfolding state transition
+  // Living per-frame animations
   useFrame(({ clock }, delta) => {
     if (!groupRef.current) return;
 
     const elapsed = clock.getElapsedTime();
-    const floatSpeed = isSelected ? 0.3 : isHovered ? 1.0 : 0.5;
-    const floatAmp = isSelected ? 0.03 : isHovered ? 0.08 : 0.04;
+    const floatSpeed = isSelected ? 0.3 : isHovered ? 1.2 : 0.6;
+    const floatAmp = isSelected ? 0.02 : isHovered ? 0.08 : 0.04;
 
     groupRef.current.position.y = position[1] + Math.sin(elapsed * floatSpeed) * floatAmp;
 
-    if (coreRef.current) {
-      coreRef.current.rotation.y += delta * (isHovered ? 0.5 : 0.2);
-      coreRef.current.rotation.x += delta * (isHovered ? 0.25 : 0.1);
-    }
-    if (ring1Ref.current) {
-      ring1Ref.current.rotation.z += delta * (isHovered ? 0.6 : 0.25);
-    }
-    if (ring2Ref.current) {
-      ring2Ref.current.rotation.y -= delta * (isHovered ? 0.4 : 0.15);
+    // 1. DevScope: Flowing Code Tree Node Rotations
+    if (nodeGroupRef.current) {
+      nodeGroupRef.current.rotation.y += delta * (isHovered ? 0.6 : 0.2);
+      nodeGroupRef.current.rotation.z += delta * (isHovered ? 0.3 : 0.1);
     }
 
-    // Mechanical unfolding expansion when selected
-    const targetShellOffset = isSelected ? 0.35 : 0;
-    if (shellLeftRef.current) {
-      shellLeftRef.current.position.x +=
-        (-targetShellOffset - shellLeftRef.current.position.x) * (delta * 4.0);
+    // 2. Intrusion Shield: Firewall Pulse & Threat Orbit
+    if (shieldRef.current) {
+      shieldRef.current.rotation.y += delta * 0.4;
+      const pulse = 1.0 + Math.sin(elapsed * 3.0) * 0.05;
+      shieldRef.current.scale.set(pulse, pulse, pulse);
     }
-    if (shellRightRef.current) {
-      shellRightRef.current.position.x +=
-        (targetShellOffset - shellRightRef.current.position.x) * (delta * 4.0);
+
+    // 3. SIH Ballot: Cryptographic Block Ledger Spin
+    if (ring1Ref.current) {
+      ring1Ref.current.rotation.y += delta * (isHovered ? 0.8 : 0.3);
+      ring1Ref.current.rotation.x += delta * 0.2;
+    }
+
+    // 4. ORBIT Engine: Quantum Processor Counter-Rotation
+    if (ring2Ref.current) {
+      ring2Ref.current.rotation.z -= delta * (isHovered ? 0.9 : 0.35);
+    }
+
+    if (coreRef.current) {
+      coreRef.current.rotation.y += delta * 0.25;
     }
   });
 
-  const scale = isSelected ? 1.25 : isHovered ? 1.04 : 1.0;
-  const targetZ = isSelected ? 0.3 : isHovered ? position[2] + 0.35 : position[2];
-  const emissiveMultiplier = isHovered || isSelected ? 1.6 : isDimmed ? 0.3 : 0.8;
+  const scale = isSelected ? 1.3 : isHovered ? 1.06 : 1.0;
+  const targetZ = isSelected ? 0.4 : isHovered ? position[2] + 0.4 : position[2];
+  const emissiveMultiplier = isHovered || isSelected ? 1.8 : isDimmed ? 0.3 : 0.85;
 
   return (
     <group
@@ -92,10 +98,12 @@ export function ArchiveObject({
         onClick();
       }}
     >
-      {/* 1. COMPUTATIONAL CORE (DevScope) */}
-      {project.objectType === "computational" && (
+      {/* ============================================================ */}
+      {/* 1. DEVSCOPE — AST CODE UNIVERSE & DEPENDENCY GRAPH           */}
+      {/* ============================================================ */}
+      {project.id === "devscope" && (
         <group>
-          {/* Glass Outer Containment Sphere */}
+          {/* Glass Containment Orb */}
           <mesh castShadow receiveShadow>
             <sphereGeometry args={[1.1, 32, 32]} />
             <meshPhysicalMaterial
@@ -104,147 +112,203 @@ export function ArchiveObject({
               roughness={materials.glass.roughness}
               thickness={1.1}
               transparent
-              opacity={0.92}
+              opacity={0.88}
             />
           </mesh>
 
-          {/* Unfolding Mechanical Protective Shell Petals */}
-          <mesh ref={shellLeftRef} position={[0, 0, 0]}>
-            <cylinderGeometry args={[1.15, 1.15, 0.4, 16, 1, false, 0, Math.PI]} />
-            <meshStandardMaterial color="#1a1c26" metalness={0.9} roughness={0.3} />
-          </mesh>
-          <mesh ref={shellRightRef} position={[0, 0, 0]}>
-            <cylinderGeometry args={[1.15, 1.15, 0.4, 16, 1, false, Math.PI, Math.PI]} />
-            <meshStandardMaterial color="#1a1c26" metalness={0.9} roughness={0.3} />
-          </mesh>
-
-          {/* Gyroscopic Telemetry Rings */}
-          <mesh ref={ring1Ref} rotation={[Math.PI / 3, 0, 0]}>
-            <torusGeometry args={[0.75, 0.02, 16, 48]} />
-            <meshStandardMaterial
-              color={accentColor}
-              emissive={accentColor}
-              emissiveIntensity={0.6 * emissiveMultiplier}
-            />
-          </mesh>
-
-          {/* Central Pulsing Data Core */}
+          {/* Central Root AST Syntax Node */}
           <mesh ref={coreRef}>
-            <octahedronGeometry args={[0.3, 1]} />
+            <octahedronGeometry args={[0.3, 0]} />
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
-              emissiveIntensity={1.2 * emissiveMultiplier}
+              emissiveIntensity={1.4 * emissiveMultiplier}
             />
           </mesh>
+
+          {/* Orbiting Child Code Nodes & Dependency Branches */}
+          <group ref={nodeGroupRef}>
+            {[0, 1, 2, 3, 4, 5].map((i) => {
+              const angle = (i * Math.PI * 2) / 6;
+              const radius = 0.65;
+              const x = Math.cos(angle) * radius;
+              const y = Math.sin(angle * 2) * 0.25;
+              const z = Math.sin(angle) * radius;
+
+              return (
+                <group key={i} position={[x, y, z]}>
+                  {/* Code Node */}
+                  <mesh>
+                    <boxGeometry args={[0.1, 0.1, 0.1]} />
+                    <meshStandardMaterial
+                      color="#f0ece4"
+                      emissive={accentColor}
+                      emissiveIntensity={0.9 * emissiveMultiplier}
+                      metalness={0.9}
+                    />
+                  </mesh>
+                  {/* Dependency Conduit Line to Center */}
+                  <line>
+                    <bufferGeometry />
+                    <lineBasicMaterial color={accentColor} transparent opacity={0.4} />
+                  </line>
+                </group>
+              );
+            })}
+          </group>
         </group>
       )}
 
-      {/* 2. NEURAL LATTICE (Intrusion Shield) */}
-      {project.objectType === "neural" && (
+      {/* ============================================================ */}
+      {/* 2. INTRUSION SHIELD — CYBERSECURITY FIREWALL & THREAT TELEMETRY */}
+      {/* ============================================================ */}
+      {project.id === "network-analyzer" && (
         <group>
-          {/* Icosahedral Neural Wireframe */}
+          {/* Central Threat Core */}
           <mesh ref={coreRef} castShadow>
-            <icosahedronGeometry args={[1.0, 1]} />
-            <meshStandardMaterial
-              color={accentColor}
-              emissive={accentColor}
-              emissiveIntensity={0.7 * emissiveMultiplier}
-              wireframe
-            />
-          </mesh>
-
-          {/* Internal Core Node */}
-          <mesh ref={ring1Ref}>
             <dodecahedronGeometry args={[0.45, 0]} />
             <meshStandardMaterial
-              color="#f0ece4"
-              emissive={accentColor}
-              emissiveIntensity={0.6 * emissiveMultiplier}
-              metalness={0.9}
+              color="#ff6b2b"
+              emissive="#ff6b2b"
+              emissiveIntensity={1.2 * emissiveMultiplier}
+              metalness={0.8}
             />
           </mesh>
-        </group>
-      )}
 
-      {/* 3. SECURITY TOPOLOGY (SIH Zero-Ballot) */}
-      {project.objectType === "topology" && (
-        <group>
-          {/* Main Octahedral Topology Shell */}
-          <mesh ref={coreRef} castShadow>
-            <octahedronGeometry args={[1.05, 0]} />
+          {/* Protective Hexagonal Firewall Shield Shell */}
+          <mesh ref={shieldRef}>
+            <icosahedronGeometry args={[0.95, 1]} />
             <meshStandardMaterial
-              color="#1a1c26"
-              metalness={0.9}
-              roughness={0.2}
+              color="#ff9f43"
+              emissive="#ff9f43"
+              emissiveIntensity={0.6 * emissiveMultiplier}
               wireframe
             />
           </mesh>
 
-          {/* Inner Coordinate Prism */}
-          <mesh ref={ring1Ref}>
-            <octahedronGeometry args={[0.55, 0]} />
-            <meshStandardMaterial
-              color={accentColor}
-              emissive={accentColor}
-              emissiveIntensity={0.8 * emissiveMultiplier}
-            />
-          </mesh>
-
-          {/* Outer Ring Cage */}
-          <mesh ref={ring2Ref} rotation={[0, 0, Math.PI / 4]}>
-            <torusGeometry args={[0.85, 0.02, 16, 48]} />
-            <meshStandardMaterial color="#2d2f3d" metalness={0.9} />
-          </mesh>
+          {/* Intercepted Threat Packet Stream Orbit */}
+          <group ref={ring1Ref}>
+            {[0, 1, 2].map((i) => {
+              const angle = (i * Math.PI * 2) / 3;
+              return (
+                <mesh
+                  key={i}
+                  position={[Math.cos(angle) * 0.75, Math.sin(angle) * 0.75, 0]}
+                >
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshStandardMaterial
+                    color="#ff3838"
+                    emissive="#ff3838"
+                    emissiveIntensity={2.0}
+                  />
+                </mesh>
+              );
+            })}
+          </group>
         </group>
       )}
 
-      {/* 4. ARCHITECTURAL ENGINE (ORBIT Engine) */}
-      {project.objectType === "architectural" && (
+      {/* ============================================================ */}
+      {/* 3. SIH ZERO-BALLOT — CRYPTOGRAPHIC BLOCKCHAIN LEDGER         */}
+      {/* ============================================================ */}
+      {project.id === "sih-ballot" && (
         <group>
-          {/* Layered Floor Plates */}
-          {[-0.5, 0, 0.5].map((y, i) => (
-            <mesh key={i} position={[0, y, 0]} castShadow>
-              <boxGeometry args={[1.3, 0.06, 1.3]} />
-              <meshPhysicalMaterial
-                color="#ffffff"
-                transmission={0.8}
-                roughness={0.1}
-                transparent
-                opacity={0.85}
-              />
-            </mesh>
-          ))}
-
-          {/* Structural Columns */}
-          {[-0.55, 0.55].map((x, i) =>
-            [-0.55, 0.55].map((z, j) => (
-              <mesh key={`${i}-${j}`} position={[x, 0, z]}>
-                <cylinderGeometry args={[0.025, 0.025, 1.1, 8]} />
-                <meshStandardMaterial color="#333544" metalness={0.9} />
-              </mesh>
-            ))
-          )}
-
-          {/* Central Compute Block */}
+          {/* Central Zero-Knowledge Proof Anchor */}
           <mesh ref={coreRef}>
-            <boxGeometry args={[0.4, 0.4, 0.4]} />
+            <octahedronGeometry args={[0.4, 0]} />
             <meshStandardMaterial
-              color={accentColor}
-              emissive={accentColor}
-              emissiveIntensity={0.9 * emissiveMultiplier}
+              color="#00f5d4"
+              emissive="#00f5d4"
+              emissiveIntensity={1.4 * emissiveMultiplier}
+            />
+          </mesh>
+
+          {/* Interconnected Immutable Blockchain Ring */}
+          <group ref={ring1Ref}>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const angle = (i * Math.PI * 2) / 5;
+              const radius = 0.75;
+              return (
+                <mesh
+                  key={i}
+                  position={[Math.cos(angle) * radius, Math.sin(angle) * radius, 0]}
+                  rotation={[0, 0, angle]}
+                >
+                  <boxGeometry args={[0.18, 0.12, 0.12]} />
+                  <meshStandardMaterial
+                    color="#1a1e29"
+                    emissive="#00f5d4"
+                    emissiveIntensity={0.5 * emissiveMultiplier}
+                    metalness={0.9}
+                  />
+                </mesh>
+              );
+            })}
+          </group>
+
+          {/* Cryptographic ZKP Verification Orbit */}
+          <mesh rotation={[Math.PI / 3, 0, 0]}>
+            <torusGeometry args={[0.9, 0.015, 16, 48]} />
+            <meshStandardMaterial
+              color="#00f5d4"
+              emissive="#00f5d4"
+              emissiveIntensity={0.6}
             />
           </mesh>
         </group>
       )}
 
-      {/* Minimal Project Datum Halo */}
-      <mesh position={[0, -1.4, 0]}>
+      {/* ============================================================ */}
+      {/* 4. ORBIT ENGINE — QUANTUM ORBITAL COMPUTATION CORE          */}
+      {/* ============================================================ */}
+      {project.id === "orbit-engine" && (
+        <group>
+          {/* Counter-Rotating Quantum Processor Plates */}
+          <group ref={ring2Ref}>
+            {[-0.35, 0, 0.35].map((y, i) => (
+              <mesh key={i} position={[0, y, 0]} rotation={[0, (i * Math.PI) / 6, 0]}>
+                <boxGeometry args={[1.0, 0.04, 1.0]} />
+                <meshPhysicalMaterial
+                  color="#ffffff"
+                  transmission={0.85}
+                  roughness={0.1}
+                  thickness={0.8}
+                  transparent
+                  opacity={0.9}
+                />
+              </mesh>
+            ))}
+          </group>
+
+          {/* Central Luminous WebGL Kernel Core */}
+          <mesh ref={coreRef}>
+            <icosahedronGeometry args={[0.3, 0]} />
+            <meshStandardMaterial
+              color="#70a1ff"
+              emissive="#70a1ff"
+              emissiveIntensity={1.8 * emissiveMultiplier}
+            />
+          </mesh>
+
+          {/* High-Speed Shader Processing Ring */}
+          <mesh rotation={[Math.PI / 4, Math.PI / 4, 0]}>
+            <torusGeometry args={[0.8, 0.02, 16, 48]} />
+            <meshStandardMaterial
+              color="#70a1ff"
+              emissive="#70a1ff"
+              emissiveIntensity={1.0}
+            />
+          </mesh>
+        </group>
+      )}
+
+      {/* Minimal Project Coordinate Datum Halo */}
+      <mesh position={[0, -1.35, 0]}>
         <ringGeometry args={[0.08, 0.75, 32]} />
         <meshBasicMaterial
           color={accentColor}
           transparent
-          opacity={isHovered || isSelected ? 0.45 : 0.1}
+          opacity={isHovered || isSelected ? 0.4 : 0.08}
           depthWrite={false}
         />
       </mesh>

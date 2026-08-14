@@ -4,7 +4,11 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useAppStore } from "@/store/useAppStore";
 import { useAdaptiveQuality } from "@/hooks/useAdaptiveQuality";
-import type { DirectionalLight, PointLight, AmbientLight } from "three";
+import { Color, type DirectionalLight, type PointLight, type AmbientLight } from "three";
+
+// Pre-allocated static Color objects for zero-allocation lerping inside useFrame
+const targetAmbientColor = new Color();
+const targetPointColor = new Color();
 
 export function Lighting() {
   const { shadowsEnabled } = useAdaptiveQuality();
@@ -13,48 +17,58 @@ export function Lighting() {
   const ambientRef = useRef<AmbientLight>(null);
   const keyLightRef = useRef<DirectionalLight>(null);
   const pointLightRef = useRef<PointLight>(null);
+  const secondaryPointRef = useRef<PointLight>(null);
 
-  // Smooth per-frame mood lighting transitions (Zero allocations)
+  // Smooth per-frame mood lighting & color palette transitions (Zero allocations)
   useFrame((_, delta) => {
     const lerpSpeed = delta * 2.5;
 
-    // Default Mission Control values
+    // 1. Mission Control: Cold Sapphire & Cyan
     let targetAmbient = 0.25;
     let targetKey = 1.0;
     let targetPoint = 0.6;
     let pointX = 0;
     let pointY = 2;
     let pointZ = 6;
+    targetAmbientColor.set("#060a14");
+    targetPointColor.set("#00e5ff");
 
     if (currentState === "ABOUT") {
-      // Focused lighting on Left Observatory
+      // 2. About: Warm Champagne & Amber Crystalline
       targetAmbient = 0.35;
-      targetKey = 1.1;
-      targetPoint = 1.2;
-      pointX = -16;
-      pointY = 1;
-      pointZ = 3;
-    } else if (currentState === "PROJECTS" || currentState === "PROJECT_DETAIL") {
-      // Focused lighting on Lower Research Archive
-      targetAmbient = 0.2;
       targetKey = 1.2;
-      targetPoint = 1.0;
+      targetPoint = 1.3;
+      pointX = -16;
+      pointY = 1.5;
+      pointZ = 3.5;
+      targetAmbientColor.set("#14100a");
+      targetPointColor.set("#ffd166");
+    } else if (currentState === "PROJECTS" || currentState === "PROJECT_DETAIL") {
+      // 3. Projects: High-Contrast Electric Amber / Orange Spotlight
+      targetAmbient = 0.18;
+      targetKey = 1.3;
+      targetPoint = 1.4;
       pointX = 0;
       pointY = -12;
-      pointZ = 3;
+      pointZ = 3.5;
+      targetAmbientColor.set("#050403");
+      targetPointColor.set("#ff7b00");
     } else if (currentState === "EXPERIENCE") {
-      // Focused lighting on Right Orbital History
-      targetAmbient = 0.3;
+      // 4. Experience: Deep Galactic Violet & Magenta Orbital Twilight
+      targetAmbient = 0.28;
       targetKey = 1.1;
-      targetPoint = 1.2;
+      targetPoint = 1.5;
       pointX = 16;
-      pointY = 1;
-      pointZ = 3;
+      pointY = 1.5;
+      pointZ = 3.5;
+      targetAmbientColor.set("#080512");
+      targetPointColor.set("#e0aaff");
     }
 
     if (ambientRef.current) {
       ambientRef.current.intensity +=
         (targetAmbient - ambientRef.current.intensity) * lerpSpeed;
+      ambientRef.current.color.lerp(targetAmbientColor, lerpSpeed);
     }
     if (keyLightRef.current) {
       keyLightRef.current.intensity +=
@@ -63,6 +77,7 @@ export function Lighting() {
     if (pointLightRef.current) {
       pointLightRef.current.intensity +=
         (targetPoint - pointLightRef.current.intensity) * lerpSpeed;
+      pointLightRef.current.color.lerp(targetPointColor, lerpSpeed);
       pointLightRef.current.position.x +=
         (pointX - pointLightRef.current.position.x) * lerpSpeed;
       pointLightRef.current.position.y +=
@@ -74,8 +89,8 @@ export function Lighting() {
 
   return (
     <>
-      {/* Deep Obsidian Ambient Base */}
-      <ambientLight ref={ambientRef} color="#080a10" intensity={0.25} />
+      {/* Dynamic Ambient Base Light */}
+      <ambientLight ref={ambientRef} color="#060a14" intensity={0.25} />
 
       {/* Primary Key Directional Sun Light with Shadows */}
       <directionalLight
@@ -95,8 +110,17 @@ export function Lighting() {
         position={[0, 2, 6]}
         intensity={0.6}
         color="#00e5ff"
-        distance={25}
+        distance={30}
         decay={2}
+      />
+
+      {/* Secondary Rim Fill */}
+      <pointLight
+        ref={secondaryPointRef}
+        position={[0, -5, -8]}
+        intensity={0.3}
+        color="#2b2d42"
+        distance={40}
       />
     </>
   );
