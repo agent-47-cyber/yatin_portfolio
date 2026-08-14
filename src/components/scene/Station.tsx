@@ -9,127 +9,158 @@ export function Station() {
   const stationGroupRef = useRef<Group>(null);
   const outerRingRef = useRef<Mesh>(null);
   const innerRingRef = useRef<Mesh>(null);
-  const coreHubRef = useRef<Mesh>(null);
-  const beaconGroupRef = useRef<Group>(null);
+  const coreRef = useRef<Mesh>(null);
+  const beaconLightsRef = useRef<Group>(null);
 
-  // Smooth per-frame mechanical rotation (Zero allocations, direct mutation)
-  useFrame((_, delta) => {
+  // Subtle living rotation & beacon breathing (Zero allocations, zero setState)
+  useFrame(({ clock }, delta) => {
+    const elapsed = clock.getElapsedTime();
+
     if (stationGroupRef.current) {
+      // Very slow global station orientation drift
       stationGroupRef.current.rotation.y += delta * 0.015;
     }
     if (outerRingRef.current) {
+      // Outer habitation ring slow spin
       outerRingRef.current.rotation.z += delta * 0.03;
     }
     if (innerRingRef.current) {
-      innerRingRef.current.rotation.z -= delta * 0.045;
+      // Middle accelerator ring counter-rotation
+      innerRingRef.current.rotation.z -= delta * 0.07;
+      innerRingRef.current.rotation.x += delta * 0.02;
     }
-    if (coreHubRef.current) {
-      coreHubRef.current.rotation.y += delta * 0.02;
+    if (coreRef.current) {
+      coreRef.current.rotation.y += delta * 0.05;
+      coreRef.current.rotation.x += delta * 0.025;
     }
-    if (beaconGroupRef.current) {
-      beaconGroupRef.current.rotation.y -= delta * 0.015;
+    if (beaconLightsRef.current) {
+      // Gentle beacon breathing
+      const pulse = 0.8 + Math.sin(elapsed * 2.5) * 0.3;
+      beaconLightsRef.current.scale.set(pulse, pulse, pulse);
     }
   });
 
-  const { materials, colors } = DESIGN_SYSTEM;
+  const { colors, materials } = DESIGN_SYSTEM;
 
   return (
     <group ref={stationGroupRef} position={[0, 0, 0]}>
-      {/* 1. Central Core Hub */}
-      <mesh ref={coreHubRef} castShadow receiveShadow>
-        <octahedronGeometry args={[3.2, 2]} />
+      {/* 1. CENTRAL COMMAND HUB */}
+      <mesh ref={coreRef} castShadow receiveShadow>
+        <octahedronGeometry args={[2.4, 1]} />
         <meshStandardMaterial
           color="#12131a"
-          roughness={materials.stationHull.roughness}
-          metalness={materials.stationHull.metalness}
+          metalness={0.9}
+          roughness={0.2}
+          wireframe={false}
         />
       </mesh>
 
-      {/* 2. Suspended Observation Glass Chamber */}
-      <mesh position={[0, 0.8, 0]}>
-        <sphereGeometry args={[2.2, 32, 32]} />
+      {/* Observation Glass Dome */}
+      <mesh position={[0, 1.2, 0]} castShadow>
+        <sphereGeometry args={[1.3, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
         <meshPhysicalMaterial
           color="#ffffff"
           transmission={materials.glass.transmission}
           roughness={materials.glass.roughness}
-          thickness={materials.glass.thickness}
-          clearcoat={materials.glass.clearcoat}
-          metalness={materials.glass.metalness}
+          thickness={1.5}
+          clearcoat={1.0}
           transparent
+          opacity={0.8}
         />
       </mesh>
 
-      {/* 3. Primary Massive Habitation Ring */}
-      <mesh ref={outerRingRef} rotation={[Math.PI / 3.5, 0, 0]} castShadow>
-        <torusGeometry args={[11.5, 0.35, 16, 120]} />
-        <meshStandardMaterial
-          color="#181922"
-          roughness={0.4}
-          metalness={0.88}
-        />
-      </mesh>
-
-      {/* 4. Secondary Glowing Cyan Accelerator Ring */}
-      <mesh ref={innerRingRef} rotation={[-Math.PI / 4, 0, 0]} castShadow>
-        <torusGeometry args={[7.2, 0.18, 16, 100]} />
+      {/* 2. INNER ACCELERATOR RING */}
+      <mesh ref={innerRingRef} rotation={[Math.PI / 6, 0, 0]}>
+        <torusGeometry args={[7.2, 0.08, 16, 120]} />
         <meshStandardMaterial
           color={colors.electricCyan}
           emissive={colors.electricCyan}
-          emissiveIntensity={0.85}
-          roughness={0.15}
-          metalness={0.9}
+          emissiveIntensity={1.4}
+          roughness={0.1}
         />
       </mesh>
 
-      {/* 5. Structural Docking Arms & Trusses */}
-      {[0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map((angle, i) => {
-        const x = Math.cos(angle) * 7.5;
-        const z = Math.sin(angle) * 7.5;
+      {/* 3. PRIMARY HABITATION RING */}
+      <group ref={outerRingRef}>
+        <mesh castShadow receiveShadow>
+          <torusGeometry args={[11.5, 0.55, 24, 120]} />
+          <meshStandardMaterial
+            color="#181924"
+            metalness={materials.stationHull.metalness}
+            roughness={materials.stationHull.roughness}
+          />
+        </mesh>
+
+        {/* Windows / Emissive Habitation Slits */}
+        <mesh>
+          <torusGeometry args={[11.5, 0.57, 8, 60]} />
+          <meshStandardMaterial
+            color={colors.warmWhite}
+            emissive={colors.warmWhite}
+            emissiveIntensity={0.6}
+            wireframe
+          />
+        </mesh>
+      </group>
+
+      {/* 4. 4 RADIAL DOCKING TRUSS ARMS */}
+      {[0, 1, 2, 3].map((i) => {
+        const angle = (i * Math.PI) / 2;
         return (
-          <group key={i} position={[x, 0, z]} rotation={[0, -angle, 0]}>
-            {/* Main Spine Truss */}
-            <mesh rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.15, 0.15, 7.0, 8]} />
-              <meshStandardMaterial color="#22232e" metalness={0.85} roughness={0.3} />
-            </mesh>
-
-            {/* Research Module Pods */}
-            <mesh position={[2.5, 0, 0]}>
-              <boxGeometry args={[1.2, 1.2, 1.8]} />
-              <meshStandardMaterial color="#14151e" metalness={0.9} roughness={0.35} />
-            </mesh>
-
-            {/* Cyan Telemetry Strip */}
-            <mesh position={[2.5, 0.65, 0]}>
-              <boxGeometry args={[0.8, 0.04, 1.4]} />
+          <group key={i} rotation={[0, 0, angle]}>
+            {/* Primary Truss Beam */}
+            <mesh position={[5.8, 0, 0]} castShadow>
+              <boxGeometry args={[11.2, 0.25, 0.35]} />
               <meshStandardMaterial
-                color={colors.electricCyan}
-                emissive={colors.electricCyan}
-                emissiveIntensity={1.2}
+                color="#222433"
+                metalness={0.9}
+                roughness={0.3}
               />
             </mesh>
 
-            {/* Solar Radiator Fin */}
-            <mesh position={[4.5, 0, 0]} rotation={[Math.PI / 4, 0, 0]}>
-              <boxGeometry args={[0.06, 2.5, 4.0]} />
-              <meshStandardMaterial color="#0c0d12" metalness={0.95} roughness={0.2} />
+            {/* Research Module Pod at End of Arm */}
+            <mesh position={[10.2, 0, 0]} castShadow>
+              <capsuleGeometry args={[0.45, 1.2, 8, 16]} />
+              <meshStandardMaterial
+                color="#141620"
+                metalness={0.8}
+                roughness={0.3}
+              />
+            </mesh>
+
+            {/* Solar Radiator Fins */}
+            <mesh position={[7.5, 0.8, 0]} rotation={[0, 0, Math.PI / 4]}>
+              <boxGeometry args={[2.2, 0.02, 0.9]} />
+              <meshStandardMaterial
+                color="#00e5ff"
+                emissive="#00e5ff"
+                emissiveIntensity={0.25}
+                roughness={0.2}
+              />
             </mesh>
           </group>
         );
       })}
 
-      {/* 6. Rotating Beacon Telemetry Indicator Lights */}
-      <group ref={beaconGroupRef}>
-        {[11.5, -11.5].map((pos, i) => (
-          <mesh key={i} position={[pos, 0, 0]}>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshStandardMaterial
-              color={colors.electricCyan}
-              emissive={colors.electricCyan}
-              emissiveIntensity={2.0}
-            />
-          </mesh>
-        ))}
+      {/* 5. CYAN TELEMETRY BEACON INDICATORS */}
+      <group ref={beaconLightsRef}>
+        {[0, 1, 2, 3].map((i) => {
+          const angle = (i * Math.PI) / 2 + Math.PI / 4;
+          const radius = 11.5;
+          return (
+            <mesh
+              key={i}
+              position={[Math.cos(angle) * radius, Math.sin(angle) * radius, 0.6]}
+            >
+              <sphereGeometry args={[0.12, 12, 12]} />
+              <meshStandardMaterial
+                color={colors.electricCyan}
+                emissive={colors.electricCyan}
+                emissiveIntensity={2.0}
+              />
+            </mesh>
+          );
+        })}
       </group>
     </group>
   );

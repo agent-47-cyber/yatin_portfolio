@@ -2,88 +2,102 @@
 
 import { useAppStore } from "@/store/useAppStore";
 import { NAVIGATION_ITEMS } from "@/config/navigation";
+import { useInteraction } from "@/hooks/useInteraction";
+import { AudioEngine } from "@/lib/audio";
 import type { ApplicationState } from "@/types";
 
 export function Navigation() {
   const currentState = useAppStore((state) => state.currentState);
   const isTransitioning = useAppStore((state) => state.isTransitioning);
   const transition = useAppStore((state) => state.transition);
+  const { registerHover } = useInteraction();
 
-  // Hidden during Intro or Project Detail mode
-  if (currentState === "INTRO" || currentState === "PROJECT_DETAIL" || currentState === "OUTRO") {
+  const handleNavigate = (targetState: ApplicationState) => {
+    if (isTransitioning || currentState === targetState) return;
+    AudioEngine.playTransition();
+    transition(targetState);
+  };
+
+  // Only active after entering Mission Control
+  if (
+    currentState === "BOOT" ||
+    currentState === "LOADING" ||
+    currentState === "INTRO"
+  ) {
     return null;
   }
 
-  const handleNavClick = (state: ApplicationState) => {
-    if (isTransitioning) return;
-    transition(state);
-  };
-
   return (
-    <nav className="fixed bottom-8 left-0 w-full px-8 md:px-16 pointer-events-auto z-20 flex justify-between items-end select-none">
-      {/* Overview Reset Trigger */}
-      <button
-        onClick={() => handleNavClick("MISSION_CONTROL")}
-        className={`group text-left transition-all duration-300 ${
-          currentState === "MISSION_CONTROL"
-            ? "opacity-100"
-            : "opacity-40 hover:opacity-90"
-        }`}
-      >
-        <span className="block font-mono-system text-[9px] tracking-[0.25em] text-[#8a8a8e] group-hover:text-[#00e5ff] transition-colors">
-          STATION
-        </span>
-        <span className="font-display text-xl md:text-2xl text-[#f0ece4] tracking-tight">
-          OVERVIEW
-        </span>
-      </button>
-
-      {/* Primary 3 Destinations */}
-      <div className="flex items-end gap-8 md:gap-20">
+    <nav
+      className="fixed bottom-8 sm:bottom-12 left-0 right-0 z-30 pointer-events-none flex flex-col items-center select-none"
+      aria-label="Orbital Sector Navigation"
+    >
+      {/* Floating Minimalist Navigation (No pill background / No heavy navbar container) */}
+      <div className="flex items-end justify-center gap-10 sm:gap-16 md:gap-24 pointer-events-auto">
         {NAVIGATION_ITEMS.map((item) => {
-          const stateName = item.label as ApplicationState;
-          const isActive = currentState === stateName;
+          const isActive = currentState === item.label;
+          const hoverHandlers = registerHover(`nav-${item.index}`);
 
           return (
             <button
-              key={item.id}
-              onClick={() => handleNavClick(stateName)}
-              className="group text-left focus:outline-none relative py-2"
+              key={item.index}
+              onClick={() => handleNavigate(item.label)}
+              onMouseEnter={() => {
+                hoverHandlers.onPointerEnter();
+                AudioEngine.playHover();
+              }}
+              onMouseLeave={hoverHandlers.onPointerLeave}
+              disabled={isTransitioning}
+              className="group relative flex flex-col items-center text-center transition-transform duration-300 hover:-translate-y-1.5 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#00e5ff]"
+              aria-label={`Navigate to ${item.label}`}
             >
-              {/* Huge Number Index */}
+              {/* Huge Syne Typography Number */}
               <span
-                className={`block font-display text-3xl sm:text-5xl md:text-6xl tracking-tighter transition-all duration-500 transform ${
+                className={`font-display text-4xl sm:text-6xl md:text-7xl leading-none transition-all duration-300 ${
                   isActive
-                    ? "text-[#00e5ff] -translate-y-1.5 drop-shadow-[0_0_20px_rgba(0,229,255,0.4)]"
-                    : "text-[#8a8a8e] opacity-40 group-hover:opacity-100 group-hover:text-[#f0ece4] group-hover:-translate-y-1"
+                    ? "text-[#00e5ff] drop-shadow-[0_0_16px_rgba(0,229,255,0.6)] scale-105"
+                    : "text-[#8a8a8e] group-hover:text-[#f0ece4] group-hover:drop-shadow-[0_0_12px_rgba(240,236,228,0.3)]"
                 }`}
               >
                 {item.index}
               </span>
 
-              {/* Minimal Section Label */}
+              {/* Minimalist Mono Label */}
               <span
-                className={`block font-mono-system text-[10px] md:text-xs tracking-[0.2em] transition-colors duration-300 ${
+                className={`font-mono-system text-[9px] sm:text-[10px] tracking-[0.25em] uppercase mt-1.5 transition-colors duration-300 ${
                   isActive
-                    ? "text-[#f0ece4] font-medium"
-                    : "text-[#8a8a8e] group-hover:text-[#00e5ff]"
+                    ? "text-[#00e5ff] font-semibold"
+                    : "text-[#8a8a8e] group-hover:text-[#f0ece4]"
                 }`}
               >
                 {item.label}
               </span>
 
-              {/* Active / Hover Cyan Underline Indicator */}
+              {/* Cyan Active Bottom Glow Line */}
               <span
-                className={`absolute bottom-0 left-0 h-[2px] bg-[#00e5ff] transition-all duration-500 ${
+                className={`h-[2px] bg-[#00e5ff] transition-all duration-300 rounded-full mt-1 ${
                   isActive
-                    ? "w-full opacity-100 shadow-[0_0_8px_#00e5ff]"
-                    : "w-0 opacity-0 group-hover:w-1/2 group-hover:opacity-60"
+                    ? "w-full shadow-[0_0_8px_#00e5ff]"
+                    : "w-0 group-hover:w-1/2 group-hover:bg-[#8a8a8e]"
                 }`}
               />
             </button>
           );
         })}
       </div>
+
+      {/* Overview Reset Trigger when inside a section */}
+      {currentState !== "MISSION_CONTROL" && currentState !== "PROJECT_DETAIL" && (
+        <button
+          onClick={() => {
+            AudioEngine.playTransition();
+            transition("MISSION_CONTROL");
+          }}
+          className="pointer-events-auto mt-4 font-mono-system text-[9px] tracking-[0.3em] uppercase text-[#8a8a8e] hover:text-[#00e5ff] transition-colors duration-200"
+        >
+          [ OVERVIEW ]
+        </button>
+      )}
     </nav>
   );
 }

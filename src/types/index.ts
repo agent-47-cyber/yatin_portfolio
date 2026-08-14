@@ -49,7 +49,8 @@ export interface Experience {
   role: string;
   description: string;
   accomplishments: string[];
-  coordinates: {
+  technologies?: string[];
+  coordinates?: {
     orbitAngle: number;
     orbitRadius: number;
     height: number;
@@ -97,6 +98,6 @@ export interface PerformanceState {
 export interface NavigationItem {
   id: SectionId;
   index: string;
-  label: string;
+  label: ApplicationState;
   internalName: "Observatory" | "Archive" | "OrbitalHistory";
 }

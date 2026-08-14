@@ -58,6 +58,8 @@ export const CAMERA_TARGETS: Record<ApplicationState, CameraTarget> = {
   },
 };
 
+export const CAMERA_WAYPOINTS = CAMERA_TARGETS;
+
 export const CAMERA_CONFIG = {
   fov: 45,
   near: 0.1,

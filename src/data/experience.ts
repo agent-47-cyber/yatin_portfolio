@@ -2,60 +2,48 @@ import type { Experience } from "@/types";
 
 export const EXPERIENCE_DATA: Experience[] = [
   {
-    id: "exp-2026",
-    year: "2026",
+    id: "exp-1",
     period: "2025 — PRESENT",
-    organization: "NEURAL SYSTEMS LABS",
-    role: "SENIOR SOFTWARE ENGINEER",
+    role: "FULL-STACK & CREATIVE DEVELOPER",
+    organization: "INDEPENDENT CONTRACTOR & FREELANCE",
     description:
-      "Leading core architecture for spatial computing interfaces and distributed GPU rendering pipelines.",
+      "Engineering modern, interactive web applications, real-time 3D user interfaces, and scalable full-stack software for modern teams and global clients.",
     accomplishments: [
-      "Engineered real-time WebGL spatial graph visualizer handling 50k+ nodes at 60 FPS",
-      "Architected deterministic state sync protocol reducing latency by 45%",
-      "Mentored team of 6 engineers across high-concurrency frontend systems",
+      "Built performant Next.js, WebGL, and Three.js interactive platforms maintaining constant 60 FPS across desktop and mobile devices.",
+      "Engineered full-stack REST and GraphQL APIs with strict TypeScript contracts, PostgreSQL, and edge serverless runtimes.",
+      "Optimized Core Web Vitals and Lighthouse metrics, achieving sub-1.2s First Contentful Paint and 99+ performance scores.",
     ],
-    coordinates: {
-      orbitAngle: 0,
-      orbitRadius: 10,
-      height: 0,
-    },
-  },
-  {
-    id: "exp-2025",
+    technologies: ["Next.js", "TypeScript", "Three.js", "Tailwind CSS", "Node.js", "PostgreSQL"],
     year: "2025",
-    period: "2024 — 2025",
-    organization: "QUANTUM INTERACTIVE",
-    role: "FULL-STACK CREATIVE DEVELOPER",
-    description:
-      "Built immersive interactive web products and high-impact digital experiences for tier-one technology enterprises.",
-    accomplishments: [
-      "Delivered 4 Awwwards Site of the Day winning interactive web applications",
-      "Pioneered procedural shader library reducing bundle size by 35%",
-      "Implemented zero-layout-shift animation system with GSAP and WebGL",
-    ],
-    coordinates: {
-      orbitAngle: (2 * Math.PI) / 3,
-      orbitRadius: 10,
-      height: 1.2,
-    },
   },
   {
-    id: "exp-2024",
-    year: "2024",
-    period: "2023 — 2024",
-    organization: "ORBITAL COMPUTING CO.",
-    role: "SOFTWARE ENGINEERING FELLOW",
+    id: "exp-2",
+    period: "2024 — 2025",
+    role: "OPEN SOURCE CONTRIBUTOR & SYSTEMS RESEARCH",
+    organization: "CREATIVE COMPUTING & OPEN SOURCE",
     description:
-      "Developed edge-native microservices and developer tooling infrastructure across cloud environments.",
+      "Researched and built open-source developer tooling, interactive WebGL experiments, and machine learning visualization prototypes.",
     accomplishments: [
-      "Optimized serverless cold starts from 320ms to 8ms using Rust WASM modules",
-      "Authored automated CI/CD static analysis ruleset adopted company-wide",
-      "Constructed internal performance benchmark telemetry suite",
+      "Contributed to high-performance TypeScript libraries, spatial shaders, and React component ecosystems.",
+      "Designed and prototyped neural network parameter visualization engines and interactive matrix manipulators.",
+      "Collaborated with international open-source communities to resolve critical runtime bottlenecks and memory leaks.",
     ],
-    coordinates: {
-      orbitAngle: (4 * Math.PI) / 3,
-      orbitRadius: 10,
-      height: -0.8,
-    },
+    technologies: ["TypeScript", "WebGL", "GLSL Shaders", "React", "Python", "Git"],
+    year: "2024",
+  },
+  {
+    id: "exp-3",
+    period: "2022 — 2026",
+    role: "B.TECH COMPUTER SCIENCE & ENGINEERING",
+    organization: "ACADEMIC & SYSTEMS FOUNDATION",
+    description:
+      "Undergraduate engineering curriculum emphasizing computer science foundations, algorithm analysis, computer graphics, and distributed systems.",
+    accomplishments: [
+      "Specialized in Algorithms, Data Structures, Operating Systems, Database Management, and Object-Oriented Architecture.",
+      "Organized and competed in collegiate hackathons, building prototype autonomous software and real-time collaboration engines.",
+      "Maintained consistent academic distinction while shipping production software applications.",
+    ],
+    technologies: ["C++", "Java", "Python", "Data Structures", "System Design", "SQL"],
+    year: "2022",
   },
 ];

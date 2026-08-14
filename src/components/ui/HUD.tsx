@@ -1,13 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { usePerformanceStore } from "@/store/usePerformanceStore";
 import { SITE_IDENTITY } from "@/config/navigation";
+import { AudioEngine } from "@/lib/audio";
 
 export function HUD() {
   const currentState = useAppStore((state) => state.currentState);
   const fps = usePerformanceStore((state) => state.fps);
   const qualityTier = usePerformanceStore((state) => state.qualityTier);
+
+  const [isMuted, setIsMuted] = useState(AudioEngine.getIsMuted());
+
+  const handleAudioToggle = () => {
+    const newMuteState = AudioEngine.toggleMute();
+    setIsMuted(newMuteState);
+  };
 
   // Hidden during Boot, Loading, and Intro
   if (currentState === "BOOT" || currentState === "LOADING" || currentState === "INTRO") {
@@ -32,14 +41,26 @@ export function HUD() {
         </div>
 
         {/* Telemetry & State Status */}
-        <div className="text-right glass-panel px-4 py-2 rounded-sm border border-[hsla(0,0%,100%,0.06)] backdrop-blur-md">
-          <p className="text-[9px] tracking-[0.25em] text-[#00e5ff] uppercase">
-            STATUS // {currentState}
-          </p>
-          <div className="flex items-center justify-end gap-2.5 text-[10px] mt-0.5">
-            <span className="text-[#f0ece4] font-medium">{fps} FPS</span>
-            <span className="opacity-30">/</span>
-            <span className="uppercase text-[#8a8a8e]">{qualityTier} TIER</span>
+        <div className="flex items-center gap-3">
+          {/* Audio Toggle */}
+          <button
+            onClick={handleAudioToggle}
+            className="pointer-events-auto text-[9px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm border border-[hsla(0,0%,100%,0.06)] glass-panel text-[#8a8a8e] hover:text-[#00e5ff] hover:border-[#00e5ff]/40 transition-all"
+            aria-label="Toggle synthetic sound effects"
+          >
+            SOUND // {isMuted ? "MUTED" : "ACTIVE"}
+          </button>
+
+          {/* FPS & Quality Status */}
+          <div className="text-right glass-panel px-4 py-2 rounded-sm border border-[hsla(0,0%,100%,0.06)] backdrop-blur-md">
+            <p className="text-[9px] tracking-[0.25em] text-[#00e5ff] uppercase">
+              STATUS // {currentState}
+            </p>
+            <div className="flex items-center justify-end gap-2.5 text-[10px] mt-0.5">
+              <span className="text-[#f0ece4] font-medium">{fps} FPS</span>
+              <span className="opacity-30">/</span>
+              <span className="uppercase text-[#8a8a8e]">{qualityTier} TIER</span>
+            </div>
           </div>
         </div>
       </header>
