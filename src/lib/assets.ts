@@ -1,11 +1,11 @@
 /**
  * ORBIT // YATIN — Asset & GPU Readiness Manager
- * Tracks real loading state of fonts, WebGL shaders, textures, and critical assets.
+ * Tracks real loading state of fonts, WebGL shaders, textures, materials, and first-frame GPU render.
  */
 
 export interface AssetManifestItem {
   id: string;
-  type: "font" | "shader" | "model" | "texture" | "audio";
+  type: "font" | "shader" | "model" | "texture" | "gpu" | "topology";
   critical: boolean;
 }
 
@@ -18,6 +18,21 @@ export const ASSET_MANIFEST: AssetManifestItem[] = [
   {
     id: "shader_compilation",
     type: "shader",
+    critical: true,
+  },
+  {
+    id: "materials_verified",
+    type: "texture",
+    critical: true,
+  },
+  {
+    id: "gpu_frame_ready",
+    type: "gpu",
+    critical: true,
+  },
+  {
+    id: "topology_mounted",
+    type: "topology",
     critical: true,
   },
 ];

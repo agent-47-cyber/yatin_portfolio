@@ -39,6 +39,7 @@ export interface Project {
   githubUrl?: string;
   objectType: ProjectObjectType;
   accentColor?: string;
+  isStandby?: boolean;
 }
 
 export interface Experience {
@@ -58,21 +59,14 @@ export interface Experience {
 }
 
 export interface AboutData {
+  sectionLabel: string;
   name: string;
-  title: string;
-  roleSubtitle: string;
-  statement: string;
-  bio: string;
-  focusAreas: string[];
-  education: {
-    degree: string;
-    institution: string;
-    year: string;
-  };
-  metrics: Array<{
-    label: string;
-    value: string;
-  }>;
+  roles: string[];
+  missionStatement: string;
+  profile: string;
+  currentFocus: string[];
+  techStack: string[];
+  currently: string[];
 }
 
 export interface CameraTarget {

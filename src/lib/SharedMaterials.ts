@@ -30,6 +30,20 @@ export const matTitaniumHull = new MeshStandardMaterial({
   roughness: 0.25,
 });
 
+/** Brushed aluminium — precision machined housing */
+export const matBrushedAluminum = new MeshStandardMaterial({
+  color: "#b0b6c2",
+  metalness: 0.88,
+  roughness: 0.22,
+});
+
+/** Carbon fiber composite panel */
+export const matCarbonFiber = new MeshStandardMaterial({
+  color: "#15171e",
+  metalness: 0.7,
+  roughness: 0.45,
+});
+
 /** Dark panel — secondary structural surface */
 export const matDarkPanel = new MeshStandardMaterial({
   color: "#1a1d28",
@@ -102,6 +116,13 @@ export const matCyanEmissiveLow = new MeshStandardMaterial({
   emissiveIntensity: 0.4,
 });
 
+/** Warm amber status / energy chamber emissive */
+export const matAmberEmissive = new MeshStandardMaterial({
+  color: "#ffbe0b",
+  emissive: "#ffbe0b",
+  emissiveIntensity: 1.2,
+});
+
 /** Navigation beacon red strobe */
 export const matRedBeacon = new MeshStandardMaterial({
   color: "#ff3838",
@@ -137,13 +158,14 @@ export const matWarmWhiteWireframe = new MeshStandardMaterial({
 /** Optical glass transmission material */
 export const matGlass = new MeshPhysicalMaterial({
   color: "#ffffff",
-  transmission: 0.9,
-  roughness: 0.15,
-  thickness: 1.5,
+  transmission: 0.92,
+  roughness: 0.08,
+  thickness: 1.6,
+  ior: 1.65,
   clearcoat: 1.0,
-  metalness: 0.1,
+  metalness: 0.05,
   transparent: true,
-  opacity: 0.88,
+  opacity: 0.9,
 });
 
 /** Cyan transparent halo / thruster cone */

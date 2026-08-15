@@ -20,65 +20,60 @@ export const PROJECTS_DATA: Project[] = [
     githubUrl: "https://github.com/agent-47-cyber/devscope",
     objectType: "computational",
     accentColor: "#00e5ff",
+    isStandby: false,
   },
   {
-    id: "network-analyzer",
-    name: "INTRUSION SHIELD",
-    category: "CYBERSECURITY // ML TELEMETRY",
-    year: "2025",
-    tagline: "REAL-TIME NETWORK PACKET ANOMALY DETECTION ENGINE",
-    description:
-      "A high-throughput packet analysis pipeline that intercepts and classifies suspicious network telemetry using unsupervised clustering.",
-    problem:
-      "Traditional rule-based intrusion detection systems fail against zero-day attack patterns and high-volume polymorphic payloads.",
-    solution:
-      "Engineered an event-driven packet listener with streaming anomaly detection in Python/C++, visualizing threat vectors on a real-time spatial graph.",
-    technology: ["Python", "C++", "FastAPI", "React", "Scikit-Learn", "Tailwind CSS"],
-    result:
-      "Achieved 98.4% detection accuracy on standard intrusion benchmarks with sub-15ms classification latency.",
-    liveUrl: "https://github.com/agent-47-cyber",
-    githubUrl: "https://github.com/agent-47-cyber/network-analyzer",
-    objectType: "neural",
-    accentColor: "#ff9f43",
-  },
-  {
-    id: "sih-ballot",
-    name: "SIH ZERO-BALLOT",
-    category: "DISTRIBUTED // CRYPTOGRAPHY",
-    year: "2024",
-    tagline: "DECENTRALIZED CRYPTOGRAPHIC VOTING ARCHITECTURE",
-    description:
-      "A tamper-proof, auditable electronic voting protocol designed for collegiate governance and collegiate hackathons.",
-    problem:
-      "Centralized electronic voting systems lack public verifiability without compromising voter ballot secrecy.",
-    solution:
-      "Implemented a zero-knowledge commitment scheme on an Ethereum testnet with blind cryptographic signatures and IPFS audit trails.",
-    technology: ["Solidity", "TypeScript", "Ethers.js", "Next.js", "IPFS", "ZKP"],
-    result:
-      "National finalist prototype at Smart India Hackathon (SIH), guaranteeing end-to-end voter anonymity and instant ledger auditability.",
-    liveUrl: "https://github.com/agent-47-cyber",
-    githubUrl: "https://github.com/agent-47-cyber/sih-voting",
-    objectType: "topology",
-    accentColor: "#00e5ff",
-  },
-  {
-    id: "orbit-engine",
-    name: "ORBIT ENGINE",
-    category: "CREATIVE // GRAPHICS & 3D",
+    id: "slot-02",
+    name: "STANDBY // 02",
+    category: "CLASSIFIED // RESERVED",
     year: "2026",
-    tagline: "HIGH-PERFORMANCE SPATIAL 3D WEB PLATFORM",
+    tagline: "CHAMBER ON STANDBY // ALLOCATION PENDING",
     description:
-      "A cinematic, 60 FPS orbital observation station experience built without compromises in performance or architecture.",
+      "This archive compartment is reserved for upcoming engineering initiatives, machine learning architectures, and distributed systems.",
     problem:
-      "Most 3D web experiences suffer from bloated bundles, low frame rates, and excessive CPU garbage collection.",
+      "Awaiting deployment of the next production engineering module into this vault sector.",
     solution:
-      "Architected with Next.js 15, React Compiler, zero-allocation useFrame loops, modular GSAP motion engines, and adaptive quality tiering.",
-    technology: ["Next.js 15", "React 19", "Three.js", "R3F", "GSAP", "Tailwind CSS v4"],
-    result:
-      "Maintains locked 60 FPS across desktop devices with under 190 KB first-load JavaScript.",
-    liveUrl: "https://github.com/agent-47-cyber/yatin_portfolio",
-    githubUrl: "https://github.com/agent-47-cyber/yatin_portfolio",
+      "Chamber sealed in low-power preservation mode until system allocation.",
+    technology: ["SYSTEM STANDBY", "ENCRYPTED VAULT", "PENDING DEPLOYMENT"],
+    result: "Standby telemetry active. Ready for new project integration.",
+    objectType: "neural",
+    accentColor: "#8a8a8e",
+    isStandby: true,
+  },
+  {
+    id: "slot-03",
+    name: "STANDBY // 03",
+    category: "CLASSIFIED // RESERVED",
+    year: "2026",
+    tagline: "CHAMBER ON STANDBY // ALLOCATION PENDING",
+    description:
+      "This archive compartment is reserved for upcoming engineering initiatives, machine learning architectures, and distributed systems.",
+    problem:
+      "Awaiting deployment of the next production engineering module into this vault sector.",
+    solution:
+      "Chamber sealed in low-power preservation mode until system allocation.",
+    technology: ["SYSTEM STANDBY", "ENCRYPTED VAULT", "PENDING DEPLOYMENT"],
+    result: "Standby telemetry active. Ready for new project integration.",
+    objectType: "topology",
+    accentColor: "#8a8a8e",
+    isStandby: true,
+  },
+  {
+    id: "slot-04",
+    name: "STANDBY // 04",
+    category: "CLASSIFIED // RESERVED",
+    year: "2026",
+    tagline: "CHAMBER ON STANDBY // ALLOCATION PENDING",
+    description:
+      "This archive compartment is reserved for upcoming engineering initiatives, machine learning architectures, and distributed systems.",
+    problem:
+      "Awaiting deployment of the next production engineering module into this vault sector.",
+    solution:
+      "Chamber sealed in low-power preservation mode until system allocation.",
+    technology: ["SYSTEM STANDBY", "ENCRYPTED VAULT", "PENDING DEPLOYMENT"],
+    result: "Standby telemetry active. Ready for new project integration.",
     objectType: "architectural",
-    accentColor: "#70a1ff",
+    accentColor: "#8a8a8e",
+    isStandby: true,
   },
 ];

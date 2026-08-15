@@ -11,22 +11,24 @@ export function TransitionOverlay() {
     (item) => item.label === currentState
   );
 
+  const isVisible = isTransitioning && currentState !== "BOOT" && currentState !== "LOADING";
+
   return (
     <div
       className={`fixed inset-0 z-40 pointer-events-none transition-opacity duration-700 flex items-center justify-center ${
-        isTransitioning
+        isVisible
           ? "opacity-100 bg-[#0a0a0c]/60 backdrop-blur-xs"
           : "opacity-0"
       }`}
     >
-      {isTransitioning && (
+      {isVisible && (
         <div className="text-center font-mono-system space-y-2 transform -translate-y-4">
           <p className="text-[10px] tracking-[0.3em] text-[#00e5ff] uppercase">
             ORBITAL VECTOR ENGAGED
           </p>
-          <h2 className="font-display text-2xl sm:text-4xl text-[#f0ece4] tracking-tight">
+          <h2 className="font-display text-2xl sm:text-4xl text-[#f0ece4] tracking-tight uppercase">
             {activeItem
-              ? `${activeItem.index} // ${activeItem.internalName.toUpperCase()}`
+              ? `${activeItem.index} // ${activeItem.internalName}`
               : currentState}
           </h2>
         </div>

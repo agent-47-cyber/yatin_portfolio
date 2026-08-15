@@ -10,6 +10,7 @@ interface AppStoreState {
   isAudioEnabled: boolean;
   isTransitioning: boolean;
   selectedProjectId: string | null;
+  selectedMilestoneYear: string;
   activeHoverId: string | null;
 
   // Actions
@@ -18,6 +19,7 @@ interface AppStoreState {
   setIntroComplete: () => void;
   toggleAudio: () => void;
   selectProject: (id: string | null) => void;
+  selectMilestone: (year: string) => void;
   setTransitioning: (transitioning: boolean) => void;
   setActiveHover: (id: string | null) => void;
   markSectionVisited: (section: SectionId) => void;
@@ -44,6 +46,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   isAudioEnabled: false,
   isTransitioning: false,
   selectedProjectId: null,
+  selectedMilestoneYear: "2024",
   activeHoverId: null,
 
   transition: (newState: ApplicationState) => {
@@ -109,6 +112,10 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         currentState: "PROJECTS",
       });
     }
+  },
+
+  selectMilestone: (year: string) => {
+    set({ selectedMilestoneYear: year });
   },
 
   setTransitioning: (transitioning: boolean) => {

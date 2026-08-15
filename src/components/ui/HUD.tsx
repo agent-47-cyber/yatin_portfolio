@@ -8,8 +8,9 @@ import { AudioEngine } from "@/lib/audio";
 
 export function HUD() {
   const currentState = useAppStore((state) => state.currentState);
+  const transition = useAppStore((state) => state.transition);
+  const selectProject = useAppStore((state) => state.selectProject);
   const fps = usePerformanceStore((state) => state.fps);
-  const qualityTier = usePerformanceStore((state) => state.qualityTier);
 
   const [isMuted, setIsMuted] = useState(AudioEngine.getIsMuted());
 
@@ -23,12 +24,18 @@ export function HUD() {
     return null;
   }
 
+  const isMissionControl = currentState === "MISSION_CONTROL";
+
   return (
-    <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-8 md:p-12 font-mono-system text-xs text-[#8a8a8e] z-10 select-none">
+    <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 sm:p-10 md:p-12 font-mono-system text-xs text-[#8a8a8e] z-40 select-none">
       {/* Top Header Grid */}
       <header className="flex justify-between items-start w-full">
-        {/* Identity & Role */}
-        <div className="space-y-1">
+        {/* Left Identity & Role (Visible only in Mission Control) */}
+        <div
+          className={`space-y-1 transition-opacity duration-500 ${
+            isMissionControl ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
           <p className="text-[10px] tracking-[0.3em] text-[#00e5ff] uppercase">
             {SITE_IDENTITY.systemName}
           </p>
@@ -40,34 +47,46 @@ export function HUD() {
           </p>
         </div>
 
-        {/* Telemetry & Audio Status */}
-        <div className="flex items-center gap-3">
-          {/* Audio Toggle */}
+        {/* Top-Right Navigation & Telemetry Cluster (Strict 16px gap, Shared Width, No Overlap) */}
+        <div className="flex flex-col items-end gap-4 ml-auto pointer-events-auto min-w-[220px]">
+          {/* Row 1: SOUND */}
           <button
             onClick={handleAudioToggle}
-            className="pointer-events-auto text-[9px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm border border-[hsla(0,0%,100%,0.06)] glass-panel text-[#8a8a8e] hover:text-[#00e5ff] hover:border-[#00e5ff]/40 transition-all focus:outline-none"
-            aria-label="Toggle synthetic sound effects"
+            className="w-full flex items-center justify-between text-[8.5px] sm:text-[9px] tracking-[0.2em] uppercase px-3.5 py-2 rounded-sm border border-[hsla(0,0%,100%,0.08)] bg-[#0a0a0c]/90 backdrop-blur-md text-[#8a8a8e] hover:text-[#00e5ff] hover:border-[#00e5ff]/40 transition-all focus:outline-none shadow-sm"
+            aria-label="Toggle sound"
           >
-            SOUND // {isMuted ? "MUTED" : "ACTIVE"}
+            <span>SOUND</span>
+            <span className={isMuted ? "text-[#8a8a8e]" : "text-[#00e5ff]"}>
+              // {isMuted ? "MUTED" : "ACTIVE"}
+            </span>
           </button>
 
-          {/* FPS & Quality Status */}
-          <div className="text-right glass-panel px-4 py-2 rounded-sm border border-[hsla(0,0%,100%,0.06)] backdrop-blur-md">
-            <p className="text-[9px] tracking-[0.25em] text-[#00e5ff] uppercase">
+          {/* Row 2: STATUS */}
+          <div className="w-full flex items-center justify-between bg-[#0a0a0c]/90 backdrop-blur-md px-3.5 py-2 rounded-sm border border-[hsla(0,0%,100%,0.08)] text-[8.5px] sm:text-[9px] tracking-wider shadow-sm">
+            <span className="text-[#00e5ff] uppercase font-semibold">
               STATUS // {currentState}
-            </p>
-            <div className="flex items-center justify-end gap-2.5 text-[10px] mt-0.5">
-              <span className="text-[#f0ece4] font-medium">{fps} FPS</span>
-              <span className="opacity-30">/</span>
-              <span className="uppercase text-[#8a8a8e]">{qualityTier} TIER</span>
-            </div>
+            </span>
+            <span className="text-[#f0ece4]">{fps} FPS</span>
           </div>
+
+          {/* Row 3: RETURN TO MISSION CONTROL (Strict 16px gap below status card) */}
+          {!isMissionControl && (
+            <button
+              onClick={() => {
+                selectProject(null);
+                transition("MISSION_CONTROL");
+              }}
+              className="w-full text-center text-[9px] tracking-[0.25em] text-[#f0ece4] hover:text-[#00e5ff] hover:border-[#00e5ff]/50 px-3.5 py-2.5 rounded-sm border border-[hsla(0,0%,100%,0.15)] bg-[#12141c]/95 backdrop-blur-md shadow-md transition-all focus:outline-none"
+            >
+              [ RETURN TO MISSION CONTROL ]
+            </button>
+          )}
         </div>
       </header>
 
       {/* Center Canvas Ambient Watermark */}
       <div className="flex-1 flex items-center justify-center pointer-events-none">
-        {currentState === "MISSION_CONTROL" && (
+        {isMissionControl && (
           <div className="text-center opacity-20 pointer-events-none transform translate-y-24">
             <p className="font-mono-system text-[9px] tracking-[0.4em] uppercase text-[#8a8a8e]">
               ORBITAL OBSERVATION PLATFORM
@@ -76,8 +95,12 @@ export function HUD() {
         )}
       </div>
 
-      {/* Minimalist Engineering Colophon Footer Badge */}
-      <footer className="flex justify-between items-end w-full text-[8px] tracking-[0.2em] uppercase text-[#8a8a8e] opacity-40 hover:opacity-100 transition-opacity duration-300">
+      {/* Minimalist Colophon Footer (Mission Control Only) */}
+      <footer
+        className={`flex justify-between items-end w-full text-[8px] tracking-[0.2em] uppercase text-[#8a8a8e] transition-opacity duration-500 ${
+          isMissionControl ? "opacity-40 hover:opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
         <div>COORDINATES // 43.12° N, 79.38° W</div>
         <div className="hidden sm:block">
           BUILT WITH NEXT.JS 15 · THREE.JS · GSAP · TYPESCRIPT
