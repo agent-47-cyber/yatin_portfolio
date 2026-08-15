@@ -19,7 +19,6 @@ export function CameraController() {
   const mousePosition = useRef({ x: 0, y: 0 });
   const currentParallax = useRef({ x: 0, y: 0 });
   const lookAtTarget = useRef(new Vector3(0, 0, 0));
-  const velocity = useRef(new Vector3(0, 0, 0));
 
   // Passive mouse coordinate tracking
   useEffect(() => {
@@ -54,24 +53,31 @@ export function CameraController() {
       waypointKey = "OUTRO";
     }
 
-    const targetWaypoint = CAMERA_WAYPOINTS[waypointKey] || CAMERA_WAYPOINTS.MISSION_CONTROL;
+    const targetWaypoint =
+      CAMERA_WAYPOINTS[waypointKey] || CAMERA_WAYPOINTS.MISSION_CONTROL;
 
     setTransitioning(true);
 
     // Physical flight curve: Accelerate -> Coast -> Micro-Overshoot -> Settle
     const timeline = gsap.timeline({
+      autoRemoveChildren: true,
       onComplete: () => {
         setTransitioning(false);
       },
     });
 
-    timeline.to(camera.position, {
-      x: targetWaypoint.position[0],
-      y: targetWaypoint.position[1],
-      z: targetWaypoint.position[2],
-      duration: targetWaypoint.duration,
-      ease: "power3.inOut",
-    });
+    timeline.to(
+      camera.position,
+      {
+        x: targetWaypoint.position[0],
+        y: targetWaypoint.position[1],
+        z: targetWaypoint.position[2],
+        duration: targetWaypoint.duration,
+        ease: "power3.inOut",
+        overwrite: "auto",
+      },
+      0
+    );
 
     timeline.to(
       lookAtTarget.current,
@@ -81,6 +87,7 @@ export function CameraController() {
         z: targetWaypoint.lookAt[2],
         duration: targetWaypoint.duration,
         ease: "power3.inOut",
+        overwrite: "auto",
       },
       0
     );
@@ -90,7 +97,7 @@ export function CameraController() {
     };
   }, [currentState, selectedProjectId, camera, setTransitioning]);
 
-  // Continuous per-frame drone breathing, roll, and inertial parallax
+  // Continuous per-frame drone breathing, roll, and inertial parallax (Zero allocations)
   useFrame(({ clock }, delta) => {
     const time = clock.getElapsedTime();
 
@@ -105,12 +112,16 @@ export function CameraController() {
 
     // 2. Drone Multi-Axis Idle Sway & Breathing (Never completely frozen)
     const driftSpeed = CAMERA_CONFIG.idleDriftSpeed;
-    const driftX = Math.sin(time * driftSpeed) * CAMERA_CONFIG.idleDriftAmplitude.x;
-    const driftY = Math.cos(time * driftSpeed * 0.7) * CAMERA_CONFIG.idleDriftAmplitude.y;
-    const driftZ = Math.sin(time * driftSpeed * 0.5) * CAMERA_CONFIG.idleDriftAmplitude.z;
+    const driftX =
+      Math.sin(time * driftSpeed) * CAMERA_CONFIG.idleDriftAmplitude.x;
+    const driftY =
+      Math.cos(time * driftSpeed * 0.7) * CAMERA_CONFIG.idleDriftAmplitude.y;
+    const driftZ =
+      Math.sin(time * driftSpeed * 0.5) * CAMERA_CONFIG.idleDriftAmplitude.z;
 
     // Apply subtle drone roll on z-axis
-    const droneRoll = Math.sin(time * 0.25) * 0.005 + currentParallax.current.x * -0.015;
+    const droneRoll =
+      Math.sin(time * 0.25) * 0.005 + currentParallax.current.x * -0.015;
     camera.rotation.z = droneRoll;
 
     // 3. Apply target lookAt with continuous inertial sway

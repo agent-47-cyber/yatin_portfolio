@@ -1,9 +1,38 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { DESIGN_SYSTEM } from "@/DESIGN_SYSTEM";
-import type { Group, Mesh, MeshStandardMaterial } from "three";
+import { Object3D, type Group, type Mesh, type InstancedMesh } from "three";
+import {
+  matTitaniumHull,
+  matDarkPanel,
+  matTrussAccent,
+  matHabitationModule,
+  matSolarPanel,
+  matSolarGrid,
+  matCommsMast,
+  matRadarDish,
+  matCyanEmissive,
+  matCyanEmissiveLow,
+  matRedBeacon,
+  matCyanBeacon,
+  geoCoreHub,
+  geoCollarRing,
+  geoPrimaryRing,
+  geoAcceleratorStrip,
+  geoHabitationModule,
+  geoSecondaryRing,
+  geoDockingPylon,
+  geoPylonRib,
+  geoSolarPanel,
+  geoSolarGrid,
+  geoAntennaMast,
+  geoRadarDish,
+  geoBeacon,
+} from "@/lib/SharedMaterials";
+
+// Pre-allocated static Object3D for zero-allocation instanced matrix setup
+const tempObj = new Object3D();
 
 export function Station() {
   const stationGroupRef = useRef<Group>(null);
@@ -15,6 +44,39 @@ export function Station() {
   const commsMastRef = useRef<Group>(null);
   const beacon1Ref = useRef<Mesh>(null);
   const beacon2Ref = useRef<Mesh>(null);
+
+  const collarInstancedRef = useRef<InstancedMesh>(null);
+  const habInstancedRef = useRef<InstancedMesh>(null);
+
+  // Initialize static instanced mesh matrices on mount
+  useEffect(() => {
+    // 1. Setup 3 Collar Rings
+    if (collarInstancedRef.current) {
+      [-1.2, 0, 1.2].forEach((y, i) => {
+        tempObj.position.set(0, y, 0);
+        tempObj.rotation.set(0, 0, 0);
+        tempObj.scale.set(1, 1, 1);
+        tempObj.updateMatrix();
+        collarInstancedRef.current?.setMatrixAt(i, tempObj.matrix);
+      });
+      collarInstancedRef.current.instanceMatrix.needsUpdate = true;
+    }
+
+    // 2. Setup 8 Habitation Modules on Primary Ring
+    if (habInstancedRef.current) {
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI * 2) / 8;
+        const x = Math.cos(angle) * 9.5;
+        const y = Math.sin(angle) * 9.5;
+        tempObj.position.set(x, y, 0);
+        tempObj.rotation.set(0, 0, angle + Math.PI / 2);
+        tempObj.scale.set(1, 1, 1);
+        tempObj.updateMatrix();
+        habInstancedRef.current?.setMatrixAt(i, tempObj.matrix);
+      }
+      habInstancedRef.current.instanceMatrix.needsUpdate = true;
+    }
+  }, []);
 
   // Per-frame slow majestic rotation (Zero allocations)
   useFrame(({ clock }, delta) => {
@@ -38,91 +100,55 @@ export function Station() {
 
     // Staggered navigation beacon strobes
     if (beacon1Ref.current) {
-      const mat1 = beacon1Ref.current.material as MeshStandardMaterial;
-      if (mat1) {
-        mat1.emissiveIntensity = Math.sin(elapsed * 4.0) > 0.7 ? 2.5 : 0.2;
-      }
+      matRedBeacon.emissiveIntensity = Math.sin(elapsed * 4.0) > 0.7 ? 2.5 : 0.2;
     }
     if (beacon2Ref.current) {
-      const mat2 = beacon2Ref.current.material as MeshStandardMaterial;
-      if (mat2) {
-        mat2.emissiveIntensity = Math.sin(elapsed * 4.0 + Math.PI) > 0.7 ? 2.5 : 0.2;
-      }
+      matCyanBeacon.emissiveIntensity =
+        Math.sin(elapsed * 4.0 + Math.PI) > 0.7 ? 2.5 : 0.2;
     }
   });
 
-  const { colors } = DESIGN_SYSTEM;
-
   return (
     <group ref={stationGroupRef} position={[0, 0, 0]}>
-      {/* 1. CENTRAL COMMAND HUB (Multi-Tiered Octagonal Core) */}
-      <mesh ref={coreHubRef} castShadow receiveShadow>
-        <cylinderGeometry args={[1.6, 1.8, 3.8, 8]} />
-        <meshStandardMaterial
-          color="#12141c"
-          metalness={0.92}
-          roughness={0.25}
-        />
-      </mesh>
+      {/* 1. CENTRAL COMMAND HUB */}
+      <mesh
+        ref={coreHubRef}
+        geometry={geoCoreHub}
+        material={matTitaniumHull}
+        castShadow
+        receiveShadow
+      />
 
-      {/* Titanium Core Collar Rings */}
-      {[-1.2, 0, 1.2].map((y, i) => (
-        <mesh key={i} position={[0, y, 0]} castShadow>
-          <torusGeometry args={[1.85, 0.06, 16, 32]} />
-          <meshStandardMaterial color="#252936" metalness={0.95} roughness={0.2} />
-        </mesh>
-      ))}
+      {/* Titanium Core Collar Rings (Instanced 3x) */}
+      <instancedMesh
+        ref={collarInstancedRef}
+        args={[geoCollarRing, matTrussAccent, 3]}
+        castShadow
+      />
 
       {/* 2. PRIMARY TITANIUM LIVING RING (Radius 9.5) */}
       <group ref={primaryRingRef}>
-        <mesh castShadow receiveShadow>
-          <torusGeometry args={[9.5, 0.35, 24, 96]} />
-          <meshStandardMaterial
-            color="#141722"
-            metalness={0.9}
-            roughness={0.28}
-          />
-        </mesh>
+        <mesh
+          geometry={geoPrimaryRing}
+          material={matTitaniumHull}
+          castShadow
+          receiveShadow
+        />
 
         {/* Luminous Inner Accelerator Strip */}
-        <mesh>
-          <torusGeometry args={[9.25, 0.02, 16, 96]} />
-          <meshStandardMaterial
-            color={colors.electricCyan}
-            emissive={colors.electricCyan}
-            emissiveIntensity={1.2}
-          />
-        </mesh>
+        <mesh geometry={geoAcceleratorStrip} material={matCyanEmissive} />
 
-        {/* Habitation Modules on Primary Ring */}
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-          const angle = (i * Math.PI * 2) / 8;
-          const x = Math.cos(angle) * 9.5;
-          const y = Math.sin(angle) * 9.5;
-          return (
-            <mesh
-              key={i}
-              position={[x, y, 0]}
-              rotation={[0, 0, angle + Math.PI / 2]}
-              castShadow
-            >
-              <boxGeometry args={[0.7, 1.2, 0.7]} />
-              <meshStandardMaterial color="#1f2330" metalness={0.9} roughness={0.3} />
-            </mesh>
-          );
-        })}
+        {/* Habitation Modules on Primary Ring (Instanced 8x) */}
+        <instancedMesh
+          ref={habInstancedRef}
+          args={[geoHabitationModule, matHabitationModule, 8]}
+          castShadow
+        />
       </group>
 
       {/* 3. COUNTER-ROTATING SECONDARY OBSERVATION RING (Radius 6.2) */}
       <group ref={secondaryRingRef} rotation={[0, 0, Math.PI / 6]}>
-        <mesh castShadow>
-          <torusGeometry args={[6.2, 0.18, 16, 64]} />
-          <meshStandardMaterial
-            color="#1a1d28"
-            metalness={0.88}
-            roughness={0.32}
-          />
-        </mesh>
+        <mesh geometry={geoSecondaryRing} material={matDarkPanel} castShadow />
       </group>
 
       {/* 4. MASSIVE STRUCTURAL DOCKING ARMS & TRUSSES */}
@@ -131,97 +157,66 @@ export function Station() {
         return (
           <group key={i} rotation={[0, 0, angle]}>
             {/* Primary Connecting Pylon */}
-            <mesh position={[4.8, 0, 0]} castShadow>
-              <boxGeometry args={[7.2, 0.18, 0.35]} />
-              <meshStandardMaterial color="#1a1d2a" metalness={0.92} roughness={0.25} />
-            </mesh>
+            <mesh
+              position={[4.8, 0, 0]}
+              geometry={geoDockingPylon}
+              material={matDarkPanel}
+              castShadow
+            />
             {/* Structural Reinforcement Ribs */}
-            <mesh position={[4.8, 0.15, 0]}>
-              <boxGeometry args={[6.8, 0.04, 0.15]} />
-              <meshStandardMaterial
-                color={colors.electricCyan}
-                emissive={colors.electricCyan}
-                emissiveIntensity={0.4}
-              />
-            </mesh>
+            <mesh
+              position={[4.8, 0.15, 0]}
+              geometry={geoPylonRib}
+              material={matCyanEmissiveLow}
+            />
           </group>
         );
       })}
 
       {/* 5. SOLAR RADIATOR PANELS (Left & Right Wings) */}
       <group ref={solarLeftRef} position={[-11.5, 0, 0]} rotation={[0, 0.2, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[3.2, 0.04, 1.6]} />
-          <meshStandardMaterial
-            color="#080c18"
-            metalness={0.98}
-            roughness={0.15}
-          />
-        </mesh>
-        {/* Photovoltaic Grid Lines */}
-        <mesh position={[0, 0.025, 0]}>
-          <planeGeometry args={[3.1, 1.5]} />
-          <meshStandardMaterial
-            color="#0077b6"
-            emissive="#0077b6"
-            emissiveIntensity={0.3}
-            wireframe
-          />
-        </mesh>
+        <mesh geometry={geoSolarPanel} material={matSolarPanel} castShadow />
+        <mesh
+          position={[0, 0.025, 0]}
+          geometry={geoSolarGrid}
+          material={matSolarGrid}
+        />
       </group>
 
       <group ref={solarRightRef} position={[11.5, 0, 0]} rotation={[0, -0.2, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[3.2, 0.04, 1.6]} />
-          <meshStandardMaterial
-            color="#080c18"
-            metalness={0.98}
-            roughness={0.15}
-          />
-        </mesh>
-        {/* Photovoltaic Grid Lines */}
-        <mesh position={[0, 0.025, 0]}>
-          <planeGeometry args={[3.1, 1.5]} />
-          <meshStandardMaterial
-            color="#0077b6"
-            emissive="#0077b6"
-            emissiveIntensity={0.3}
-            wireframe
-          />
-        </mesh>
+        <mesh geometry={geoSolarPanel} material={matSolarPanel} castShadow />
+        <mesh
+          position={[0, 0.025, 0]}
+          geometry={geoSolarGrid}
+          material={matSolarGrid}
+        />
       </group>
 
       {/* 6. COMMUNICATIONS MAST & ROTATING RADAR ARRAY */}
       <group ref={commsMastRef} position={[0, 2.5, 0]}>
-        {/* Antenna Mast Spine */}
-        <mesh castShadow>
-          <cylinderGeometry args={[0.04, 0.08, 2.0, 8]} />
-          <meshStandardMaterial color="#33384a" metalness={0.95} />
-        </mesh>
-        {/* Parabolic High-Gain Dish */}
-        <mesh position={[0, 0.8, 0.2]} rotation={[Math.PI / 3, 0, 0]} castShadow>
-          <coneGeometry args={[0.45, 0.15, 16, 1, true]} />
-          <meshStandardMaterial color="#4a5068" metalness={0.9} roughness={0.3} />
-        </mesh>
+        <mesh geometry={geoAntennaMast} material={matCommsMast} castShadow />
+        <mesh
+          position={[0, 0.8, 0.2]}
+          rotation={[Math.PI / 3, 0, 0]}
+          geometry={geoRadarDish}
+          material={matRadarDish}
+          castShadow
+        />
       </group>
 
       {/* 7. NAVIGATION BEACON STROBES */}
-      <mesh ref={beacon1Ref} position={[0, 3.6, 0]}>
-        <sphereGeometry args={[0.07, 8, 8]} />
-        <meshStandardMaterial
-          color="#ff3838"
-          emissive="#ff3838"
-          emissiveIntensity={2.5}
-        />
-      </mesh>
-      <mesh ref={beacon2Ref} position={[0, -3.2, 0]}>
-        <sphereGeometry args={[0.07, 8, 8]} />
-        <meshStandardMaterial
-          color="#00e5ff"
-          emissive="#00e5ff"
-          emissiveIntensity={2.5}
-        />
-      </mesh>
+      <mesh
+        ref={beacon1Ref}
+        position={[0, 3.6, 0]}
+        geometry={geoBeacon}
+        material={matRedBeacon}
+      />
+      <mesh
+        ref={beacon2Ref}
+        position={[0, -3.2, 0]}
+        geometry={geoBeacon}
+        material={matCyanBeacon}
+      />
     </group>
   );
 }

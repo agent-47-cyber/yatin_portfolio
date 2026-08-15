@@ -34,7 +34,12 @@ export const usePerformanceStore = create<PerformanceStoreState>((set, get) => (
   chromaticAberrationEnabled: initialTier.chromaticAberrationEnabled,
 
   reportFps: (fps: number) => {
-    set({ fps });
+    const currentFps = get().fps;
+    // Only update state if change is >= 2 FPS to reduce unnecessary subscriber re-renders
+    if (Math.abs(fps - currentFps) >= 2) {
+      set({ fps });
+    }
+
     const { degradationThresholds, recoveryThreshold } = PERFORMANCE_CONFIG;
 
     if (fps < degradationThresholds.minimal) {
@@ -47,6 +52,7 @@ export const usePerformanceStore = create<PerformanceStoreState>((set, get) => (
   },
 
   setQualityTier: (tier: QualityTier) => {
+    if (get().qualityTier === tier) return;
     const config = PERFORMANCE_CONFIG.tiers[tier];
     set({
       qualityTier: tier,

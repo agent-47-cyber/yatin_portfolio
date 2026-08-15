@@ -2,9 +2,24 @@
 
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { DESIGN_SYSTEM } from "@/DESIGN_SYSTEM";
 import type { Project } from "@/types";
 import type { Group, Mesh } from "three";
+import {
+  matGlass,
+  geoGlassOrb,
+  geoRootNode,
+  geoCodeNode,
+  geoThreatCore,
+  geoFirewallShield,
+  geoThreatPacket,
+  geoBallotAnchor,
+  geoChainBlock,
+  geoBallotRing,
+  geoProcessorPlate,
+  geoKernelCore,
+  geoShaderRing,
+  geoDatumHalo,
+} from "@/lib/SharedMaterials";
 
 interface ArchiveObjectProps {
   project: Project;
@@ -34,10 +49,9 @@ export function ArchiveObject({
   const ring1Ref = useRef<Mesh>(null);
   const ring2Ref = useRef<Mesh>(null);
 
-  const { colors, materials } = DESIGN_SYSTEM;
-  const accentColor = project.accentColor || colors.electricCyan;
+  const accentColor = project.accentColor || "#00e5ff";
 
-  // Living per-frame animations
+  // Living per-frame animations (Zero allocations)
   useFrame(({ clock }, delta) => {
     if (!groupRef.current) return;
 
@@ -45,7 +59,8 @@ export function ArchiveObject({
     const floatSpeed = isSelected ? 0.3 : isHovered ? 1.2 : 0.6;
     const floatAmp = isSelected ? 0.02 : isHovered ? 0.08 : 0.04;
 
-    groupRef.current.position.y = position[1] + Math.sin(elapsed * floatSpeed) * floatAmp;
+    groupRef.current.position.y =
+      position[1] + Math.sin(elapsed * floatSpeed) * floatAmp;
 
     // 1. DevScope: Flowing Code Tree Node Rotations
     if (nodeGroupRef.current) {
@@ -98,27 +113,17 @@ export function ArchiveObject({
         onClick();
       }}
     >
-      {/* ============================================================ */}
-      {/* 1. DEVSCOPE — AST CODE UNIVERSE & DEPENDENCY GRAPH           */}
-      {/* ============================================================ */}
+      {/* 1. DEVSCOPE — AST CODE UNIVERSE */}
       {project.id === "devscope" && (
         <group>
-          {/* Glass Containment Orb */}
-          <mesh castShadow receiveShadow>
-            <sphereGeometry args={[1.1, 32, 32]} />
-            <meshPhysicalMaterial
-              color="#ffffff"
-              transmission={materials.glass.transmission}
-              roughness={materials.glass.roughness}
-              thickness={1.1}
-              transparent
-              opacity={0.88}
-            />
-          </mesh>
+          <mesh
+            geometry={geoGlassOrb}
+            material={matGlass}
+            castShadow
+            receiveShadow
+          />
 
-          {/* Central Root AST Syntax Node */}
-          <mesh ref={coreRef}>
-            <octahedronGeometry args={[0.3, 0]} />
+          <mesh ref={coreRef} geometry={geoRootNode}>
             <meshStandardMaterial
               color={accentColor}
               emissive={accentColor}
@@ -126,7 +131,6 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Orbiting Child Code Nodes & Dependency Branches */}
           <group ref={nodeGroupRef}>
             {[0, 1, 2, 3, 4, 5].map((i) => {
               const angle = (i * Math.PI * 2) / 6;
@@ -137,9 +141,7 @@ export function ArchiveObject({
 
               return (
                 <group key={i} position={[x, y, z]}>
-                  {/* Code Node */}
-                  <mesh>
-                    <boxGeometry args={[0.1, 0.1, 0.1]} />
+                  <mesh geometry={geoCodeNode}>
                     <meshStandardMaterial
                       color="#f0ece4"
                       emissive={accentColor}
@@ -147,11 +149,6 @@ export function ArchiveObject({
                       metalness={0.9}
                     />
                   </mesh>
-                  {/* Dependency Conduit Line to Center */}
-                  <line>
-                    <bufferGeometry />
-                    <lineBasicMaterial color={accentColor} transparent opacity={0.4} />
-                  </line>
                 </group>
               );
             })}
@@ -159,14 +156,10 @@ export function ArchiveObject({
         </group>
       )}
 
-      {/* ============================================================ */}
-      {/* 2. INTRUSION SHIELD — CYBERSECURITY FIREWALL & THREAT TELEMETRY */}
-      {/* ============================================================ */}
+      {/* 2. INTRUSION SHIELD — CYBERSECURITY FIREWALL */}
       {project.id === "network-analyzer" && (
         <group>
-          {/* Central Threat Core */}
-          <mesh ref={coreRef} castShadow>
-            <dodecahedronGeometry args={[0.45, 0]} />
+          <mesh ref={coreRef} geometry={geoThreatCore} castShadow>
             <meshStandardMaterial
               color="#ff6b2b"
               emissive="#ff6b2b"
@@ -175,9 +168,7 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Protective Hexagonal Firewall Shield Shell */}
-          <mesh ref={shieldRef}>
-            <icosahedronGeometry args={[0.95, 1]} />
+          <mesh ref={shieldRef} geometry={geoFirewallShield}>
             <meshStandardMaterial
               color="#ff9f43"
               emissive="#ff9f43"
@@ -186,16 +177,19 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Intercepted Threat Packet Stream Orbit */}
           <group ref={ring1Ref}>
             {[0, 1, 2].map((i) => {
               const angle = (i * Math.PI * 2) / 3;
               return (
                 <mesh
                   key={i}
-                  position={[Math.cos(angle) * 0.75, Math.sin(angle) * 0.75, 0]}
+                  position={[
+                    Math.cos(angle) * 0.75,
+                    Math.sin(angle) * 0.75,
+                    0,
+                  ]}
+                  geometry={geoThreatPacket}
                 >
-                  <sphereGeometry args={[0.05, 8, 8]} />
                   <meshStandardMaterial
                     color="#ff3838"
                     emissive="#ff3838"
@@ -208,14 +202,10 @@ export function ArchiveObject({
         </group>
       )}
 
-      {/* ============================================================ */}
-      {/* 3. SIH ZERO-BALLOT — CRYPTOGRAPHIC BLOCKCHAIN LEDGER         */}
-      {/* ============================================================ */}
+      {/* 3. SIH ZERO-BALLOT — CRYPTOGRAPHIC LEDGER */}
       {project.id === "sih-ballot" && (
         <group>
-          {/* Central Zero-Knowledge Proof Anchor */}
-          <mesh ref={coreRef}>
-            <octahedronGeometry args={[0.4, 0]} />
+          <mesh ref={coreRef} geometry={geoBallotAnchor}>
             <meshStandardMaterial
               color="#00f5d4"
               emissive="#00f5d4"
@@ -223,7 +213,6 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* Interconnected Immutable Blockchain Ring */}
           <group ref={ring1Ref}>
             {[0, 1, 2, 3, 4].map((i) => {
               const angle = (i * Math.PI * 2) / 5;
@@ -231,10 +220,14 @@ export function ArchiveObject({
               return (
                 <mesh
                   key={i}
-                  position={[Math.cos(angle) * radius, Math.sin(angle) * radius, 0]}
+                  position={[
+                    Math.cos(angle) * radius,
+                    Math.sin(angle) * radius,
+                    0,
+                  ]}
                   rotation={[0, 0, angle]}
+                  geometry={geoChainBlock}
                 >
-                  <boxGeometry args={[0.18, 0.12, 0.12]} />
                   <meshStandardMaterial
                     color="#1a1e29"
                     emissive="#00f5d4"
@@ -246,9 +239,7 @@ export function ArchiveObject({
             })}
           </group>
 
-          {/* Cryptographic ZKP Verification Orbit */}
-          <mesh rotation={[Math.PI / 3, 0, 0]}>
-            <torusGeometry args={[0.9, 0.015, 16, 48]} />
+          <mesh rotation={[Math.PI / 3, 0, 0]} geometry={geoBallotRing}>
             <meshStandardMaterial
               color="#00f5d4"
               emissive="#00f5d4"
@@ -258,31 +249,22 @@ export function ArchiveObject({
         </group>
       )}
 
-      {/* ============================================================ */}
-      {/* 4. ORBIT ENGINE — QUANTUM ORBITAL COMPUTATION CORE          */}
-      {/* ============================================================ */}
+      {/* 4. ORBIT ENGINE — QUANTUM COMPUTATION CORE */}
       {project.id === "orbit-engine" && (
         <group>
-          {/* Counter-Rotating Quantum Processor Plates */}
           <group ref={ring2Ref}>
             {[-0.35, 0, 0.35].map((y, i) => (
-              <mesh key={i} position={[0, y, 0]} rotation={[0, (i * Math.PI) / 6, 0]}>
-                <boxGeometry args={[1.0, 0.04, 1.0]} />
-                <meshPhysicalMaterial
-                  color="#ffffff"
-                  transmission={0.85}
-                  roughness={0.1}
-                  thickness={0.8}
-                  transparent
-                  opacity={0.9}
-                />
-              </mesh>
+              <mesh
+                key={i}
+                position={[0, y, 0]}
+                rotation={[0, (i * Math.PI) / 6, 0]}
+                geometry={geoProcessorPlate}
+                material={matGlass}
+              />
             ))}
           </group>
 
-          {/* Central Luminous WebGL Kernel Core */}
-          <mesh ref={coreRef}>
-            <icosahedronGeometry args={[0.3, 0]} />
+          <mesh ref={coreRef} geometry={geoKernelCore}>
             <meshStandardMaterial
               color="#70a1ff"
               emissive="#70a1ff"
@@ -290,9 +272,10 @@ export function ArchiveObject({
             />
           </mesh>
 
-          {/* High-Speed Shader Processing Ring */}
-          <mesh rotation={[Math.PI / 4, Math.PI / 4, 0]}>
-            <torusGeometry args={[0.8, 0.02, 16, 48]} />
+          <mesh
+            rotation={[Math.PI / 4, Math.PI / 4, 0]}
+            geometry={geoShaderRing}
+          >
             <meshStandardMaterial
               color="#70a1ff"
               emissive="#70a1ff"
@@ -303,8 +286,7 @@ export function ArchiveObject({
       )}
 
       {/* Minimal Project Coordinate Datum Halo */}
-      <mesh position={[0, -1.35, 0]}>
-        <ringGeometry args={[0.08, 0.75, 32]} />
+      <mesh position={[0, -1.35, 0]} geometry={geoDatumHalo}>
         <meshBasicMaterial
           color={accentColor}
           transparent

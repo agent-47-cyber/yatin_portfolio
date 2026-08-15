@@ -4,6 +4,12 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useAdaptiveQuality } from "@/hooks/useAdaptiveQuality";
 import { Object3D, type InstancedMesh } from "three";
+import {
+  matStarParticle,
+  matDustParticle,
+  geoStarSphere,
+  geoDustSphere,
+} from "@/lib/SharedMaterials";
 
 // Pre-allocated static Object3D to eliminate garbage collection inside useFrame
 const dummy = new Object3D();
@@ -51,7 +57,7 @@ export function Particles() {
     return data;
   }, []);
 
-  // Per-frame multi-plane particle drift
+  // Per-frame multi-plane particle drift (Zero allocations)
   useFrame(({ clock }) => {
     const time = clock.getElapsedTime();
 
@@ -87,20 +93,16 @@ export function Particles() {
       {/* Background Starfield */}
       <instancedMesh
         ref={starMeshRef}
-        args={[undefined, undefined, starData.length]}
-      >
-        <sphereGeometry args={[1, 6, 6]} />
-        <meshBasicMaterial color="#f0ece4" />
-      </instancedMesh>
+        args={[geoStarSphere, matStarParticle, starData.length]}
+        frustumCulled={false}
+      />
 
       {/* Foreground Ambient Space Dust */}
       <instancedMesh
         ref={dustMeshRef}
-        args={[undefined, undefined, dustData.length]}
-      >
-        <sphereGeometry args={[1, 4, 4]} />
-        <meshBasicMaterial color="#00e5ff" transparent opacity={0.35} />
-      </instancedMesh>
+        args={[geoDustSphere, matDustParticle, dustData.length]}
+        frustumCulled={false}
+      />
     </group>
   );
 }

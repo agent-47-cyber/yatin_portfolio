@@ -2,8 +2,15 @@
 
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { DESIGN_SYSTEM } from "@/DESIGN_SYSTEM";
-import type { Group, Mesh } from "three";
+import type { Group } from "three";
+import {
+  matDroneChassis,
+  matCyanBeacon,
+  matCyanTransparent,
+  geoDroneChassis,
+  geoDroneSensor,
+  geoDroneThruster,
+} from "@/lib/SharedMaterials";
 
 interface DroneData {
   radius: number;
@@ -49,37 +56,30 @@ export function Drones() {
     });
   });
 
-  const { colors } = DESIGN_SYSTEM;
-
   return (
     <group ref={groupRef}>
       {dronesData.map((_, i) => (
         <group key={i} ref={droneRefs[i]}>
           {/* Drone Chassis */}
-          <mesh castShadow>
-            <boxGeometry args={[0.3, 0.08, 0.45]} />
-            <meshStandardMaterial color="#1a1c26" metalness={0.9} roughness={0.2} />
-          </mesh>
+          <mesh
+            geometry={geoDroneChassis}
+            material={matDroneChassis}
+            castShadow
+          />
 
           {/* Forward Sensor Pod */}
-          <mesh position={[0, 0, 0.25]}>
-            <sphereGeometry args={[0.06, 8, 8]} />
-            <meshStandardMaterial
-              color={colors.electricCyan}
-              emissive={colors.electricCyan}
-              emissiveIntensity={2.5}
-            />
-          </mesh>
+          <mesh
+            position={[0, 0, 0.25]}
+            geometry={geoDroneSensor}
+            material={matCyanBeacon}
+          />
 
           {/* Subtle Thruster Trail */}
-          <mesh position={[0, 0, -0.25]}>
-            <coneGeometry args={[0.04, 0.2, 8]} />
-            <meshBasicMaterial
-              color={colors.electricCyan}
-              transparent
-              opacity={0.6}
-            />
-          </mesh>
+          <mesh
+            position={[0, 0, -0.25]}
+            geometry={geoDroneThruster}
+            material={matCyanTransparent}
+          />
         </group>
       ))}
     </group>

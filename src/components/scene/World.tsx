@@ -16,6 +16,7 @@ import { Archive } from "@/components/projects/Archive";
 import { OrbitalHistory } from "@/components/experience/OrbitalHistory";
 import { CameraController } from "@/components/camera/CameraController";
 import { SceneManager } from "@/components/scene/SceneManager";
+import { SectorVisibility } from "@/components/scene/SectorVisibility";
 import { PostProcessing } from "@/components/scene/PostProcessing";
 import { useAdaptiveQuality } from "@/hooks/useAdaptiveQuality";
 
@@ -53,9 +54,19 @@ export function World() {
           <Station />
           <Drones />
           <TelemetryHolo />
-          <Observatory />
-          <Archive />
-          <OrbitalHistory />
+
+          {/* Sector-managed 3D rooms */}
+          <SectorVisibility sector="ABOUT">
+            <Observatory />
+          </SectorVisibility>
+
+          <SectorVisibility sector="PROJECTS">
+            <Archive />
+          </SectorVisibility>
+
+          <SectorVisibility sector="EXPERIENCE">
+            <OrbitalHistory />
+          </SectorVisibility>
         </Suspense>
 
         <PostProcessing />

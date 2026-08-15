@@ -1,27 +1,24 @@
 /**
- * ORBIT // YATIN — Asset Manager
- * Centralized registry and caching layer for all 3D assets, textures, HDRs, and audio.
+ * ORBIT // YATIN — Asset & GPU Readiness Manager
+ * Tracks real loading state of fonts, WebGL shaders, textures, and critical assets.
  */
 
 export interface AssetManifestItem {
   id: string;
-  url: string;
-  type: "model" | "texture" | "hdr" | "audio";
+  type: "font" | "shader" | "model" | "texture" | "audio";
   critical: boolean;
 }
 
 export const ASSET_MANIFEST: AssetManifestItem[] = [
   {
-    id: "station_shell",
-    url: "/models/station_main.glb",
-    type: "model",
+    id: "system_fonts",
+    type: "font",
     critical: true,
   },
   {
-    id: "env_space",
-    url: "/hdr/env_space.hdr",
-    type: "hdr",
-    critical: false,
+    id: "shader_compilation",
+    type: "shader",
+    critical: true,
   },
 ];
 
@@ -29,6 +26,17 @@ class AssetManagerService {
   private loadedAssets: Set<string> = new Set();
   private totalCritical = ASSET_MANIFEST.filter((a) => a.critical).length;
   private progressCallbacks: Array<(progress: number) => void> = [];
+
+  constructor() {
+    // Check font readiness if in browser environment
+    if (typeof window !== "undefined" && "fonts" in document) {
+      document.fonts.ready.then(() => {
+        this.markLoaded("system_fonts");
+      });
+    } else {
+      this.markLoaded("system_fonts");
+    }
+  }
 
   public getProgress(): number {
     if (this.totalCritical === 0) return 1.0;
@@ -43,6 +51,7 @@ class AssetManagerService {
   }
 
   public markLoaded(id: string): void {
+    if (this.loadedAssets.has(id)) return;
     this.loadedAssets.add(id);
     const p = this.getProgress();
     this.progressCallbacks.forEach((cb) => cb(p));
@@ -50,6 +59,8 @@ class AssetManagerService {
 
   public onProgress(callback: (progress: number) => void): () => void {
     this.progressCallbacks.push(callback);
+    // Trigger immediate current progress on registration
+    callback(this.getProgress());
     return () => {
       this.progressCallbacks = this.progressCallbacks.filter(
         (cb) => cb !== callback
