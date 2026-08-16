@@ -53,13 +53,12 @@ export function ArchiveDetail() {
                   <button
                     key={p.id}
                     onClick={() => selectProject(p.id)}
-                    className={`font-mono-system text-[9px] tracking-[0.15em] px-2.5 py-1 rounded-sm transition-all duration-200 focus:outline-none ${
-                      isSelected
+                    className={`font-mono-system text-[9px] tracking-[0.15em] px-2.5 py-1 rounded-sm transition-all duration-200 focus:outline-none ${isSelected
                         ? isStandby
                           ? "bg-[#8a8a8e]/30 text-[#f0ece4] font-bold border border-[#8a8a8e]/60"
                           : "bg-[#00e5ff] text-[#0a0a0c] font-bold shadow-[0_0_12px_rgba(0,229,255,0.4)]"
                         : "text-[#8a8a8e] hover:text-[#f0ece4] hover:bg-[#12141c]/60 border border-[hsla(0,0%,100%,0.06)]"
-                    }`}
+                      }`}
                   >
                     {isStandby ? `0${index + 1} [STANDBY]` : `PROJECT 0${index + 1}`}
                   </button>
@@ -69,9 +68,8 @@ export function ArchiveDetail() {
 
             {/* Project Designation & Clean Name */}
             <div className="space-y-1 pt-1">
-              <span className={`font-mono-system text-[9px] tracking-[0.25em] uppercase font-semibold block ${
-                project.isStandby ? "text-[#8a8a8e]" : "text-[#00e5ff]"
-              }`}>
+              <span className={`font-mono-system text-[9px] tracking-[0.25em] uppercase font-semibold block ${project.isStandby ? "text-[#8a8a8e]" : "text-[#00e5ff]"
+                }`}>
                 {project.category} // {project.year}
               </span>
               <h1 className="font-display text-2xl sm:text-3xl text-[#f0ece4] tracking-tight leading-none">
@@ -97,9 +95,8 @@ export function ArchiveDetail() {
               </div>
 
               <div className="space-y-1">
-                <span className={`font-mono-system text-[8.5px] tracking-[0.2em] uppercase block font-semibold ${
-                  project.isStandby ? "text-[#8a8a8e]" : "text-[#00e5ff]"
-                }`}>
+                <span className={`font-mono-system text-[8.5px] tracking-[0.2em] uppercase block font-semibold ${project.isStandby ? "text-[#8a8a8e]" : "text-[#00e5ff]"
+                  }`}>
                   {project.isStandby ? "COMPARTMENT TELEMETRY" : "ENGINEERED ARCHITECTURE"}
                 </span>
                 <p className="font-sans text-xs text-[#8a8a8e] leading-relaxed">
@@ -111,9 +108,8 @@ export function ArchiveDetail() {
             {/* Aerospace Specification Modules: System Stack & Measured Outcome */}
             <div className="p-3 rounded-sm border border-[hsla(0,0%,100%,0.08)] bg-[#12141c]/80 backdrop-blur-md space-y-2.5">
               <div>
-                <span className={`font-mono-system text-[8.5px] tracking-[0.2em] uppercase block font-semibold border-b border-[hsla(0,0%,100%,0.08)] pb-1 mb-1.5 ${
-                  project.isStandby ? "text-[#8a8a8e]" : "text-[#00e5ff]"
-                }`}>
+                <span className={`font-mono-system text-[8.5px] tracking-[0.2em] uppercase block font-semibold border-b border-[hsla(0,0%,100%,0.08)] pb-1 mb-1.5 ${project.isStandby ? "text-[#8a8a8e]" : "text-[#00e5ff]"
+                  }`}>
                   {project.isStandby ? "CHAMBER STATUS" : "SYSTEM STACK"}
                 </span>
                 <ul className="grid grid-cols-2 gap-1 font-mono-system text-[9.5px] text-[#f0ece4]">

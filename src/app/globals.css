@@ -9,6 +9,15 @@
     --color-warm-orange: #ff6b2b;
     --color-glass-bg: hsla(240, 10%, 12%, 0.4);
     --color-glass-border: hsla(0, 0%, 100%, 0.06);
+
+    /* Fluid Typography Scale */
+    --text-fluid-hero: clamp(2.4rem, 5.5vw, 4.5rem);
+    --text-fluid-title: clamp(1.1rem, 2.2vw, 1.8rem);
+    --text-fluid-nav-num: clamp(2.6rem, 4.5vw, 4.2rem);
+    --text-fluid-nav-label: clamp(0.7rem, 1.1vw, 0.95rem);
+    --text-fluid-badge: clamp(0.55rem, 0.75vw, 0.75rem);
+    --text-fluid-body: clamp(0.85rem, 1.1vw, 1.05rem);
+    --text-fluid-mono: clamp(0.7rem, 0.9vw, 0.85rem);
   }
 
   * {
@@ -61,6 +70,27 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-glass-border);
+}
+
+/* Conduit Energy Pulse Animations */
+@keyframes conduitPulse {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-conduit-pulse {
+  animation: conduitPulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Accessibility: Reduced Motion */

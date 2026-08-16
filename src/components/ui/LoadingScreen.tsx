@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { AssetManager } from "@/lib/assets";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -27,70 +27,80 @@ export function LoadingScreen() {
   const [progress, setProgress] = useState(0);
   const [isMissionReady, setIsMissionReady] = useState(false);
 
-  const startTimeRef = useRef<number>(Date.now());
-  const TOTAL_DURATION_MS = 2800; // Constant steady 2.8s initialization pace
-
   useEffect(() => {
+    if (currentState !== "BOOT" && currentState !== "LOADING") return;
+
     if (currentState === "BOOT") {
       transition("LOADING");
     }
 
-    const targetProgressRef = { current: 0 };
-    const unsubscribe = AssetManager.onProgress((realProgress) => {
-      targetProgressRef.current = Math.round(realProgress * 100);
-    });
-
     let animationFrameId: number;
+    let completionTimeoutId: number | undefined;
     let currentSmoothProgress = 0;
     let lastTime = Date.now();
-    
-    // Constant velocity: 100% per 2800ms
-    const PROGRESS_PER_MS = 100 / 2800;
+    let isCompleted = false;
+    let realProgress = AssetManager.getProgress();
+    const unsubscribe = AssetManager.onProgress((value) => {
+      realProgress = value;
+    });
+
+    // The UI may approach readiness smoothly, but never completes until the
+    // renderer has mounted, compiled, and drawn the critical environment.
+    const PROGRESS_PER_MS = 100 / 2200;
     let hasPlayedHover = false;
     let hasPlayedClick = false;
 
     const tick = () => {
+      if (isCompleted) return;
       const now = Date.now();
-      const deltaMs = Math.min(now - lastTime, 50); // Cap delta to prevent huge jumps if tab is backgrounded
+      const deltaMs = Math.min(now - lastTime, 50);
       lastTime = now;
 
-      const isAssetsReady = targetProgressRef.current >= 100 || AssetManager.isCriticalReady();
-      
-      // Constant linear advance. Hold at 95% only if assets are genuinely not ready.
-      if (!isAssetsReady && currentSmoothProgress >= 95) {
-         currentSmoothProgress = 95;
+      const isCriticalReady = realProgress >= 1 || AssetManager.isCriticalReady();
+      if (isCriticalReady) {
+        currentSmoothProgress = Math.min(
+          100,
+          currentSmoothProgress + Math.max(deltaMs * 0.18, (100 - currentSmoothProgress) * 0.08)
+        );
       } else {
-         currentSmoothProgress += deltaMs * PROGRESS_PER_MS;
+        currentSmoothProgress = Math.min(
+          92,
+          currentSmoothProgress + deltaMs * PROGRESS_PER_MS
+        );
       }
-
-      currentSmoothProgress = Math.min(100, currentSmoothProgress);
       const roundedProgress = Math.floor(currentSmoothProgress);
-      
+
       setProgress(roundedProgress);
 
-      // Trigger subtle audio milestones exactly once
+      // Trigger audio milestones
       if (roundedProgress >= 25 && !hasPlayedHover) {
-        AudioEngine.playHover();
+        try {
+          AudioEngine.playHover();
+        } catch {}
         hasPlayedHover = true;
       }
       if (roundedProgress >= 75 && !hasPlayedClick) {
-        AudioEngine.playClick();
+        try {
+          AudioEngine.playClick();
+        } catch {}
         hasPlayedClick = true;
       }
 
-      // Check for absolute completion
-      if (roundedProgress >= 100 && isAssetsReady) {
+      // Check for completion
+      if (roundedProgress >= 100 && isCriticalReady) {
+        isCompleted = true;
         setIsMissionReady(true);
-        AudioEngine.playTransition();
+        try {
+          AudioEngine.playTransition();
+        } catch {}
 
-        // 300ms confirmation settle delay
-        setTimeout(() => {
+        completionTimeoutId = window.setTimeout(() => {
           if (prefersReducedMotion) {
             skipIntro();
           } else {
             transition("INTRO");
           }
-        }, 300);
+        }, 250);
         return;
       }
 
@@ -101,19 +111,13 @@ export function LoadingScreen() {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      if (completionTimeoutId) window.clearTimeout(completionTimeoutId);
       unsubscribe();
     };
   }, [currentState, transition, skipIntro, prefersReducedMotion]);
 
   const isVisible = currentState === "BOOT" || currentState === "LOADING";
 
-  // Dynamic Background Reveal & Depth of Field Mask:
-  // 0-10%: Faint station silhouettes + UI
-  // 10-25%: Station fades in (stars & silhouettes clear)
-  // 25-50%: Major station structures visible
-  // 50-75%: Identity Core crystal details become clear
-  // 75-90%: Lighting and reflections settle
-  // 90-100%: 100% sharp and fully rendered
   const getAtmosphereStyles = (p: number) => {
     if (p < 10) {
       return { bgAlpha: 0.85, blurPx: 16 };
@@ -175,12 +179,11 @@ export function LoadingScreen() {
             </div>
           </div>
 
-          {/* Center Area: Completely clean to showcase the physical 3D station emerging in background */}
+          {/* Center Area */}
           <div className="flex-1 flex items-center justify-center pointer-events-none" />
 
-          {/* Bottom Diagnostic Terminal & Steady Constant-Velocity Power Conduit */}
+          {/* Bottom Diagnostic Terminal & Power Conduit */}
           <div className="w-full max-w-xl mx-auto space-y-4">
-            {/* Real Diagnostic Terminal Stack */}
             <div className="p-3.5 rounded-sm border border-[hsla(0,0%,100%,0.08)] bg-[#0a0a0c]/85 backdrop-blur-md space-y-1.5 shadow-2xl">
               <div className="flex justify-between items-center pb-1.5 border-b border-[hsla(0,0%,100%,0.06)] text-[8.5px]">
                 <span className="text-[#8a8a8e] tracking-[0.2em] uppercase font-semibold">
@@ -197,7 +200,7 @@ export function LoadingScreen() {
                 </span>
               </div>
 
-              {/* Grid of Diagnostic Items (Illuminates in steady linear succession) */}
+              {/* Grid of Diagnostic Items */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 pt-1 font-mono-system text-[9px]">
                 {DIAGNOSTIC_STEPS.map((step) => {
                   const isDone = progress >= step.threshold;
@@ -225,7 +228,7 @@ export function LoadingScreen() {
               </div>
             </div>
 
-            {/* Stable, Constant-Velocity Power Conduit Flow Line */}
+            {/* Power Conduit Flow Line */}
             <div className="space-y-1">
               <div className="flex justify-between items-center text-[8.5px] font-mono-system tracking-widest text-[#8a8a8e]">
                 <span>CONDUIT POWER FLOW</span>

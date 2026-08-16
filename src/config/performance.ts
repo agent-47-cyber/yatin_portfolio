@@ -15,10 +15,18 @@ export const PERFORMANCE_CONFIG = {
     maxHdrMaps: 1,
     maxLights: 5,
     maxPostprocessingPasses: 5,
+    // Canvas backing-store budget. DPR is derived from this rather than a
+    // fixed device threshold so 4K and ultrawide displays do not oversubscribe
+    // the GPU while regular desktop displays retain high-density rendering.
+    maxRenderPixels: {
+      high: 4500000,
+      medium: 3200000,
+      low: 2200000,
+    },
   },
   tiers: {
     high: {
-      dpr: 1.8,
+      dpr: 1.5,
       shadowsEnabled: true,
       particleCount: DESIGN_SYSTEM.particles.count.high,
       bloomEnabled: true,
@@ -57,13 +65,27 @@ export const PERFORMANCE_CONFIG = {
     }
   >,
   degradationThresholds: {
-    dof: 55,
-    bloom: 50,
-    dpr: 48,
-    particles: 45,
-    shadows: 40,
-    minimal: 35,
+    dof: 50,
+    bloom: 45,
+    dpr: 40,
+    particles: 35,
+    shadows: 30,
+    minimal: 25,
   },
-  recoveryThreshold: 58,
+  recoveryThreshold: 57,
   recoveryWindowFrames: 300,
+  degradationSamples: 3,
+  recoverySamples: 5,
 } as const;
+
+export function getSafeDprCap(
+  tier: QualityTier,
+  configuredCap: number,
+  width: number,
+  height: number
+) {
+  const pixelBudget = PERFORMANCE_CONFIG.budgets.maxRenderPixels[tier];
+  const viewportPixels = Math.max(width * height, 1);
+  const pixelBoundedCap = Math.sqrt(pixelBudget / viewportPixels);
+  return Math.max(1, Math.min(configuredCap, pixelBoundedCap));
+}

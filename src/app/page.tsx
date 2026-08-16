@@ -10,7 +10,6 @@ import { ArchiveDetail } from "@/components/projects/ArchiveDetail";
 import { OrbitalHistoryContent } from "@/components/experience/OrbitalHistoryContent";
 import { HUD } from "@/components/ui/HUD";
 import { Navigation } from "@/components/ui/Navigation";
-import { CustomCursor } from "@/components/ui/CustomCursor";
 
 // Dynamic import for persistent 3D Canvas (No SSR)
 const World = dynamic(() => import("@/components/scene/World"), {
@@ -32,7 +31,7 @@ export default function Home() {
       {/* Layer 3: Cinematic Intro Sequence */}
       <IntroOverlay />
 
-      {/* Layer 4: Section Transition Veil */}
+      {/* Layer 4: Section Transition Overlay (Zero Dimming) */}
       <TransitionOverlay />
 
       {/* Layer 5: Observatory Section Content Overlay */}
@@ -49,9 +48,6 @@ export default function Home() {
 
       {/* Layer 9: Minimalist Bottom Navigation */}
       <Navigation />
-
-      {/* Layer 10: Smooth Lerping Custom Cursor */}
-      <CustomCursor />
     </main>
   );
 }

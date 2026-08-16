@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useAppStore } from "@/store/useAppStore";
+import { useResponsiveViewport } from "@/hooks/useResponsiveViewport";
 import type { Group, Mesh, MeshStandardMaterial } from "three";
 import {
   matTitaniumHull,
@@ -13,7 +14,11 @@ import {
   matStructuralRib,
   matCyanEmissive,
   matCyanEmissiveLow,
+  matSolarPanel,
+  matSolarGrid,
   matGlass,
+  geoSolarPanel,
+  geoSolarGrid,
 } from "@/lib/SharedMaterials";
 
 export function Observatory() {
@@ -24,6 +29,7 @@ export function Observatory() {
   const innerGimbalRef = useRef<Group>(null);
   const scanLaserRef = useRef<Mesh>(null);
 
+  const { profile } = useResponsiveViewport();
   const currentState = useAppStore((state) => state.currentState);
   const isAboutActive = currentState === "ABOUT";
 
@@ -31,9 +37,11 @@ export function Observatory() {
   useFrame(({ clock }, delta) => {
     const elapsed = clock.getElapsedTime();
 
-    // 1. Structural assembly micro-breathing
+    // 1. Structural assembly micro-breathing & adaptive scale
     if (groupRef.current) {
       groupRef.current.position.y = 0.2 + Math.sin(elapsed * 0.25) * 0.025;
+      const targetScale = isAboutActive ? 1.0 : profile.heroScale;
+      groupRef.current.scale.set(targetScale, targetScale, targetScale);
     }
 
     // 2. Faceted Optical Crystal slow refractive rotation & subtle vertical suspension
@@ -71,34 +79,40 @@ export function Observatory() {
 
   return (
     <group ref={groupRef} position={[-13.8, 0.2, -0.8]}>
-      {/* ============================================================ */}
-      {/* DEDICATED SECTOR LIGHTING (Cinematic Specular & Rim Glint)  */}
-      {/* ============================================================ */}
-      {isAboutActive && (
-        <>
-          <pointLight
-            position={[0, 1.2, 3.0]}
-            intensity={10.0}
-            color="#ffffff"
-            distance={8}
-          />
-          <pointLight
-            position={[-2.5, 0, 1.5]}
-            intensity={8.0}
-            color="#00e5ff"
-            distance={8}
-          />
-          <pointLight
-            position={[2.5, -1.0, -1.0]}
-            intensity={5.0}
-            color="#ffd166"
-            distance={8}
-          />
-        </>
-      )}
+      {/* Dedicated Sector Lighting (Permanent stable fill) */}
+      <pointLight
+        position={[0, 1.2, 3.0]}
+        intensity={2.5}
+        color="#ffffff"
+        distance={8}
+      />
+      <pointLight
+        position={[-2.5, 0, 1.5]}
+        intensity={2.0}
+        color="#00e5ff"
+        distance={8}
+      />
+      <pointLight
+        position={[2.5, -1.0, -1.0]}
+        intensity={1.5}
+        color="#ffd166"
+        distance={8}
+      />
 
       {/* ============================================================ */}
-      {/* 1. HEAVY INDUSTRIAL DOCKING FOUNDATION & ARTICULATED STANCHIONS */}
+      {/* 1. HORIZONTAL SCIENCE SOLAR WINGS (Distinct Observatory Profile) */}
+      {/* ============================================================ */}
+      <group position={[-2.8, -0.5, 0]} rotation={[0, 0.3, 0]}>
+        <mesh geometry={geoSolarPanel} material={matSolarPanel} castShadow />
+        <mesh
+          position={[0, 0.025, 0]}
+          geometry={geoSolarGrid}
+          material={matSolarGrid}
+        />
+      </group>
+
+      {/* ============================================================ */}
+      {/* 2. HEAVY INDUSTRIAL DOCKING FOUNDATION & ARTICULATED STANCHIONS */}
       {/* ============================================================ */}
       {/* Heavy Station Foundation Base Block */}
       <mesh position={[0, -2.5, 0]} castShadow receiveShadow>
@@ -123,59 +137,43 @@ export function Observatory() {
             position={[x, -1.3, z]}
             rotation={[0, -angle + Math.PI / 2, 0]}
           >
-            {/* Carbon Fiber Primary Arm Pylon */}
             <mesh rotation={[0, 0, 0.32]} castShadow>
               <boxGeometry args={[0.24, 2.2, 0.3]} />
               <primitive object={matCarbonFiber} attach="material" />
             </mesh>
-            {/* Machined Hydraulic Cylinder Actuator */}
             <mesh position={[-0.15, 0, 0]} rotation={[0, 0, 0.32]}>
               <cylinderGeometry args={[0.055, 0.055, 1.8, 12]} />
               <primitive object={matBrushedAluminum} attach="material" />
             </mesh>
-            {/* Power Conduit Cable Line */}
             <mesh position={[-0.22, 0, 0]} rotation={[0, 0, 0.32]}>
               <cylinderGeometry args={[0.02, 0.02, 1.9, 8]} />
               <primitive object={matCyanEmissiveLow} attach="material" />
-            </mesh>
-            {/* Arm Joint Fastener Hub */}
-            <mesh position={[0.3, 0.9, 0]}>
-              <cylinderGeometry args={[0.12, 0.12, 0.34, 16]} />
-              <primitive object={matTrussAccent} attach="material" />
             </mesh>
           </group>
         );
       })}
 
-      {/* Top Suspended Cryogenic Cooling Hood */}
+      {/* Top Suspended Cryogenic Cooling Hood & Geodesic Ring */}
       <group position={[0, 2.5, 0]}>
         <mesh castShadow>
           <cylinderGeometry args={[1.5, 1.1, 0.35, 24]} />
           <primitive object={matTitaniumHull} attach="material" />
         </mesh>
-        {/* Heat Dissipation Radiator Grille Fins */}
-        {[0, 1, 2, 3, 4, 5].map((i) => {
-          const angle = (i * Math.PI) / 3;
-          return (
-            <mesh key={i} rotation={[0, angle, 0]} position={[0, 0.2, 0]}>
-              <boxGeometry args={[1.8, 0.15, 0.03]} />
-              <primitive object={matStructuralRib} attach="material" />
-            </mesh>
-          );
-        })}
+        <mesh position={[0, 0.25, 0]}>
+          <torusGeometry args={[1.3, 0.04, 16, 32]} />
+          <primitive object={matCyanEmissiveLow} attach="material" />
+        </mesh>
       </group>
 
       {/* ============================================================ */}
-      {/* 2. THE ENGINEERED IDENTITY REACTOR HERO MACHINE              */}
+      {/* 3. OPTICAL TELESCOPE GIMBAL & CRYSTAL AI CORE                */}
       {/* ============================================================ */}
-      {/* Outer Gyroscopic Dark Titanium Circular Housing */}
+      {/* Outer Gyroscopic Titanium Housing */}
       <group ref={outerGyroRef}>
-        {/* Main Outer Titanium Ring */}
         <mesh castShadow>
           <torusGeometry args={[1.75, 0.055, 16, 64]} />
           <primitive object={matTitaniumHull} attach="material" />
         </mesh>
-        {/* Machined Aluminum Reinforcement Clamp Blocks with Allen Fasteners */}
         {[0, 1, 2, 3].map((i) => {
           const angle = (i * Math.PI) / 2;
           return (
@@ -188,17 +186,12 @@ export function Observatory() {
                 <boxGeometry args={[0.18, 0.14, 0.22]} />
                 <primitive object={matBrushedAluminum} attach="material" />
               </mesh>
-              {/* Cyan Status Channel Strip */}
-              <mesh position={[0, 0, 0.12]}>
-                <boxGeometry args={[0.12, 0.02, 0.01]} />
-                <primitive object={matCyanEmissiveLow} attach="material" />
-              </mesh>
             </group>
           );
         })}
       </group>
 
-      {/* Inner Mechanical Gimbal Frame with Cyan Energy Channel */}
+      {/* Inner Mechanical Gimbal Frame */}
       <group ref={innerGimbalRef}>
         <mesh castShadow>
           <torusGeometry args={[1.4, 0.035, 16, 64]} />
@@ -208,30 +201,15 @@ export function Observatory() {
           <torusGeometry args={[1.37, 0.012, 16, 64]} />
           <primitive object={matCyanEmissive} attach="material" />
         </mesh>
-        {/* 4 Articulated Titanium Containment Locking Claws */}
-        {[0, 1, 2, 3].map((i) => {
-          const angle = (i * Math.PI) / 2 + Math.PI / 4;
-          return (
-            <mesh
-              key={i}
-              position={[Math.cos(angle) * 1.15, Math.sin(angle) * 1.15, 0]}
-              rotation={[0, 0, angle + Math.PI / 2]}
-              castShadow
-            >
-              <boxGeometry args={[0.12, 0.35, 0.08]} />
-              <primitive object={matBrushedAluminum} attach="material" />
-            </mesh>
-          );
-        })}
       </group>
 
-      {/* Central Faceted Optical Crystal (High Clarity Precision Gem) */}
+      {/* Central Faceted Optical Crystal */}
       <mesh ref={crystalRef} position={[0, 0, 0]} castShadow>
         <octahedronGeometry args={[0.75, 0]} />
         <primitive object={matGlass} attach="material" />
       </mesh>
 
-      {/* Internal Protected Energy Core Seed (Electric Cyan / Soft White Kernel) */}
+      {/* Internal Protected Energy Core Seed */}
       <mesh ref={innerEnergySeedRef} position={[0, 0, 0]}>
         <octahedronGeometry args={[0.22, 0]} />
         <meshStandardMaterial
@@ -241,7 +219,7 @@ export function Observatory() {
         />
       </mesh>
 
-      {/* Vertical Optical Calibration Scanning Laser */}
+      {/* Vertical Optical Calibration Laser */}
       <mesh
         ref={scanLaserRef}
         position={[0, 0, 0]}
@@ -257,51 +235,6 @@ export function Observatory() {
           depthWrite={false}
         />
       </mesh>
-
-      {/* Power Routing Bus Lines at Base */}
-      <group position={[0, -2.1, 0]}>
-        {[0, 1, 2, 3].map((i) => {
-          const angle = (i * Math.PI) / 2;
-          return (
-            <mesh
-              key={i}
-              position={[Math.cos(angle) * 1.2, 0.4, Math.sin(angle) * 1.2]}
-            >
-              <cylinderGeometry args={[0.025, 0.025, 0.8, 8]} />
-              <primitive object={matCyanEmissiveLow} attach="material" />
-            </mesh>
-          );
-        })}
-      </group>
-
-      {/* ============================================================ */}
-      {/* 3. RIGHT SIDE INFRASTRUCTURE (Support Truss & Cable Routing)  */}
-      {/* (Replaces the floating blue wireframe box completely)         */}
-      {/* ============================================================ */}
-      <group position={[2.4, 0, -0.4]}>
-        {/* Vertical Station Structural Support Truss */}
-        <mesh position={[0, 0, 0]} castShadow>
-          <boxGeometry args={[0.18, 3.8, 0.18]} />
-          <primitive object={matTrussAccent} attach="material" />
-        </mesh>
-        {/* Diagonal Truss Cross-Braces */}
-        {[-1.0, 0.4].map((y, i) => (
-          <mesh key={i} position={[0, y, 0]} rotation={[0, 0, 0.4]}>
-            <boxGeometry args={[0.8, 0.04, 0.08]} />
-            <primitive object={matStructuralRib} attach="material" />
-          </mesh>
-        ))}
-        {/* Inspection Collar Station Telemetry Port */}
-        <mesh position={[-0.15, 0.8, 0]}>
-          <cylinderGeometry args={[0.12, 0.12, 0.25, 16]} />
-          <primitive object={matBrushedAluminum} attach="material" />
-        </mesh>
-        {/* Data Cable Conduit Line */}
-        <mesh position={[-0.08, 0, 0.1]}>
-          <cylinderGeometry args={[0.015, 0.015, 3.6, 8]} />
-          <primitive object={matCyanEmissiveLow} attach="material" />
-        </mesh>
-      </group>
     </group>
   );
 }

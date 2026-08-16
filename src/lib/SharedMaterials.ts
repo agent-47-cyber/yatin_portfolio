@@ -37,6 +37,13 @@ export const matBrushedAluminum = new MeshStandardMaterial({
   roughness: 0.22,
 });
 
+/** Warm gold titanium trim for reactor housing accents */
+export const matGoldTrim = new MeshStandardMaterial({
+  color: "#e6af2e",
+  metalness: 0.85,
+  roughness: 0.28,
+});
+
 /** Carbon fiber composite panel */
 export const matCarbonFiber = new MeshStandardMaterial({
   color: "#15171e",
@@ -106,43 +113,52 @@ export const matDroneChassis = new MeshStandardMaterial({
 export const matCyanEmissive = new MeshStandardMaterial({
   color: "#00e5ff",
   emissive: "#00e5ff",
-  emissiveIntensity: 1.2,
+  emissiveIntensity: 1.5,
+});
+
+/** High-intensity plasma core emitter */
+export const matPlasmaCore = new MeshStandardMaterial({
+  color: "#00e5ff",
+  emissive: "#00e5ff",
+  emissiveIntensity: 3.0,
+  roughness: 0.1,
 });
 
 /** Subtle cyan structural glow */
 export const matCyanEmissiveLow = new MeshStandardMaterial({
   color: "#00e5ff",
   emissive: "#00e5ff",
-  emissiveIntensity: 0.4,
+  emissiveIntensity: 0.45,
 });
 
 /** Warm amber status / energy chamber emissive */
 export const matAmberEmissive = new MeshStandardMaterial({
   color: "#ffbe0b",
   emissive: "#ffbe0b",
-  emissiveIntensity: 1.2,
+  emissiveIntensity: 1.8,
 });
 
 /** Navigation beacon red strobe */
 export const matRedBeacon = new MeshStandardMaterial({
   color: "#ff3838",
   emissive: "#ff3838",
-  emissiveIntensity: 2.5,
+  emissiveIntensity: 3.2,
 });
 
 /** Navigation beacon cyan strobe */
 export const matCyanBeacon = new MeshStandardMaterial({
   color: "#00e5ff",
   emissive: "#00e5ff",
-  emissiveIntensity: 2.5,
+  emissiveIntensity: 3.0,
 });
 
-/** Photovoltaic grid wireframe */
+/** Photovoltaic grid sleek dark surface */
 export const matSolarGrid = new MeshStandardMaterial({
-  color: "#0077b6",
-  emissive: "#0077b6",
-  emissiveIntensity: 0.3,
-  wireframe: true,
+  color: "#0a1828",
+  metalness: 0.95,
+  roughness: 0.25,
+  emissive: "#003554",
+  emissiveIntensity: 0.15,
 });
 
 /** Warm white holographic wireframe */
@@ -155,17 +171,17 @@ export const matWarmWhiteWireframe = new MeshStandardMaterial({
 
 // ─── SHARED OPTICAL & BASIC MATERIALS ───────────────────────────────────────
 
-/** Optical glass transmission material */
+/** Crystal-clear optical glass with Apple-grade specular sheen (Zero black ray refraction) */
 export const matGlass = new MeshPhysicalMaterial({
-  color: "#ffffff",
-  transmission: 0.92,
-  roughness: 0.08,
-  thickness: 1.6,
-  ior: 1.65,
-  clearcoat: 1.0,
+  color: "#b0f0ff",
   metalness: 0.05,
+  roughness: 0.04,
   transparent: true,
-  opacity: 0.9,
+  opacity: 0.2,
+  reflectivity: 0.95,
+  clearcoat: 1.0,
+  clearcoatRoughness: 0.04,
+  depthWrite: false,
 });
 
 /** Cyan transparent halo / thruster cone */
@@ -173,6 +189,15 @@ export const matCyanTransparent = new MeshBasicMaterial({
   color: "#00e5ff",
   transparent: true,
   opacity: 0.6,
+  depthWrite: false,
+});
+
+/** Holographic scan sweep laser beam */
+export const matHoloScanBeam = new MeshBasicMaterial({
+  color: "#00e5ff",
+  transparent: true,
+  opacity: 0.08,
+  depthWrite: false,
 });
 
 /** Background star particle material */
@@ -185,12 +210,40 @@ export const matDustParticle = new MeshBasicMaterial({
   color: "#00e5ff",
   transparent: true,
   opacity: 0.35,
+  depthWrite: false,
 });
 
 // ─── SHARED GEOMETRIES ──────────────────────────────────────────────────────
 
 /** Station core hub octagonal cylinder */
 export const geoCoreHub = new CylinderGeometry(1.6, 1.8, 3.8, 8);
+
+/** Reactor faceted optical crystal */
+export const geoReactorCrystal = new OctahedronGeometry(0.82, 0);
+
+/** Reactor hyper-dense plasma orb */
+export const geoPlasmaOrb = new SphereGeometry(0.32, 16, 16);
+
+/** Reactor outer magnetic cradle ring */
+export const geoReactorCradleRing = new TorusGeometry(1.55, 0.045, 16, 64);
+
+/** Reactor counter-rotating inner gimbal ring */
+export const geoReactorGimbalInner = new TorusGeometry(1.15, 0.03, 16, 64);
+
+/** Reactor containment iris blade */
+export const geoReactorIrisBlade = new BoxGeometry(0.16, 0.62, 0.05);
+
+/** Reactor structural pylon strut */
+export const geoReactorSupportStrut = new CylinderGeometry(0.035, 0.035, 2.6, 8);
+
+/** Communications Spire Mast */
+export const geoSpireMast = new CylinderGeometry(0.03, 0.09, 5.2, 8);
+
+/** Large Parabolic Deep Space Dish */
+export const geoParabolicDishLarge = new ConeGeometry(0.9, 0.28, 24, 1, true);
+
+/** High-Gain Transceiver Array Pod */
+export const geoTransceiverArray = new BoxGeometry(0.14, 1.9, 0.14);
 
 /** Collar ring torus (reused 3x on station core) */
 export const geoCollarRing = new TorusGeometry(1.85, 0.06, 16, 32);

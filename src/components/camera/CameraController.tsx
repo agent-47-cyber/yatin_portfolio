@@ -1,136 +1,166 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useThree, useFrame } from "@react-three/fiber";
-import gsap from "gsap";
+import { useFrame, useThree } from "@react-three/fiber";
+import { PerspectiveCamera, Vector3 } from "three";
 import { useAppStore } from "@/store/useAppStore";
-import { CAMERA_CONFIG, CAMERA_WAYPOINTS } from "@/config/camera";
-import { Vector3 } from "three";
+import { getResponsiveCameraTarget, CAMERA_CONFIG } from "@/config/camera";
+import { useResponsiveViewport } from "@/hooks/useResponsiveViewport";
+import type { ApplicationState, CameraTarget } from "@/types";
 
-// Pre-allocated static vectors to eliminate GC overhead inside useFrame
-const vLookAt = new Vector3();
+const lookAtWithIdle = new Vector3();
+const centerState: ApplicationState = "MISSION_CONTROL";
+
+function isInspectionState(state: ApplicationState) {
+  return state === "ABOUT" || state === "PROJECTS" || state === "PROJECT_DETAIL" || state === "EXPERIENCE";
+}
+
+/**
+ * Critically damped spring integration. This is stable across frame rates and
+ * avoids a direct cursor-to-camera mapping or competing timeline writes.
+ */
+function dampVector(
+  value: Vector3,
+  velocity: Vector3,
+  target: Vector3,
+  smoothTime: number,
+  delta: number,
+  change: Vector3,
+  temp: Vector3
+) {
+  const safeDelta = Math.min(delta, 1 / 20);
+  const omega = 2 / smoothTime;
+  const x = omega * safeDelta;
+  const exponential = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+
+  change.copy(value).sub(target);
+  temp.copy(velocity).addScaledVector(change, omega).multiplyScalar(safeDelta);
+  velocity.addScaledVector(temp, -omega).multiplyScalar(exponential);
+  value.copy(target).add(change.add(temp).multiplyScalar(exponential));
+}
 
 export function CameraController() {
   const { camera } = useThree();
+  const { profile } = useResponsiveViewport();
   const currentState = useAppStore((state) => state.currentState);
+  const previousState = useAppStore((state) => state.previousState);
   const selectedProjectId = useAppStore((state) => state.selectedProjectId);
   const setTransitioning = useAppStore((state) => state.setTransitioning);
 
-  const mousePosition = useRef({ x: 0, y: 0 });
-  const currentParallax = useRef({ x: 0, y: 0 });
-  const lookAtTarget = useRef(new Vector3(0, 0, 0));
+  const mousePosition = useRef(new Vector3());
+  const parallax = useRef(new Vector3());
+  const parallaxVelocity = useRef(new Vector3());
+  const parallaxTarget = useRef(new Vector3());
+  const positionVelocity = useRef(new Vector3());
+  const lookAtVelocity = useRef(new Vector3());
+  const cameraTarget = useRef(new Vector3(0, 1.5, 18));
+  const lookAtTarget = useRef(new Vector3());
+  const currentLookAt = useRef(new Vector3());
+  const route = useRef<CameraTarget[]>([]);
+  const change = useRef(new Vector3());
+  const temp = useRef(new Vector3());
 
-  // Passive mouse coordinate tracking
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
-      mousePosition.current = {
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      };
+      mousePosition.current.set(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1,
+        0
+      );
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Drone-like camera waypoint transitions
   useEffect(() => {
-    let waypointKey: keyof typeof CAMERA_WAYPOINTS = "MISSION_CONTROL";
-
-    if (currentState === "BOOT" || currentState === "LOADING") {
-      waypointKey = "BOOT";
-    } else if (currentState === "INTRO") {
-      waypointKey = "INTRO";
-    } else if (currentState === "ABOUT") {
-      waypointKey = "ABOUT";
-    } else if (currentState === "PROJECTS") {
-      waypointKey = selectedProjectId ? "PROJECT_DETAIL" : "PROJECTS";
-    } else if (currentState === "PROJECT_DETAIL") {
-      waypointKey = "PROJECT_DETAIL";
-    } else if (currentState === "EXPERIENCE") {
-      waypointKey = "EXPERIENCE";
-    } else if (currentState === "OUTRO") {
-      waypointKey = "OUTRO";
+    if (camera instanceof PerspectiveCamera) {
+      camera.fov = profile.fov;
+      camera.updateProjectionMatrix();
     }
+  }, [camera, profile.fov]);
 
-    const targetWaypoint =
-      CAMERA_WAYPOINTS[waypointKey] || CAMERA_WAYPOINTS.MISSION_CONTROL;
+  useEffect(() => {
+    const effectiveState = currentState === "PROJECTS" && selectedProjectId
+      ? "PROJECT_DETAIL"
+      : currentState;
+    const previousEffectiveState = previousState === "PROJECTS" && selectedProjectId
+      ? "PROJECT_DETAIL"
+      : previousState;
+    const destination = getResponsiveCameraTarget(effectiveState, profile);
+    const requiresCenterWaypoint =
+      previousEffectiveState !== null &&
+      isInspectionState(previousEffectiveState) &&
+      isInspectionState(effectiveState) &&
+      previousEffectiveState !== effectiveState;
 
+    route.current = requiresCenterWaypoint
+      ? [getResponsiveCameraTarget(centerState, profile), destination]
+      : [destination];
+
+    const firstWaypoint = route.current[0];
+    cameraTarget.current.fromArray(firstWaypoint.position);
+    lookAtTarget.current.fromArray(firstWaypoint.lookAt);
     setTransitioning(true);
+  }, [camera, currentState, previousState, profile, selectedProjectId, setTransitioning]);
 
-    // Physical flight curve: Accelerate -> Coast -> Micro-Overshoot -> Settle
-    const timeline = gsap.timeline({
-      autoRemoveChildren: true,
-      onComplete: () => {
-        setTransitioning(false);
-      },
-    });
-
-    timeline.to(
-      camera.position,
-      {
-        x: targetWaypoint.position[0],
-        y: targetWaypoint.position[1],
-        z: targetWaypoint.position[2],
-        duration: targetWaypoint.duration,
-        ease: "power3.inOut",
-        overwrite: "auto",
-      },
-      0
-    );
-
-    timeline.to(
-      lookAtTarget.current,
-      {
-        x: targetWaypoint.lookAt[0],
-        y: targetWaypoint.lookAt[1],
-        z: targetWaypoint.lookAt[2],
-        duration: targetWaypoint.duration,
-        ease: "power3.inOut",
-        overwrite: "auto",
-      },
-      0
-    );
-
-    return () => {
-      timeline.kill();
-    };
-  }, [currentState, selectedProjectId, camera, setTransitioning]);
-
-  // Continuous per-frame drone breathing, roll, and inertial parallax (Zero allocations)
   useFrame(({ clock }, delta) => {
-    const time = clock.getElapsedTime();
+    dampVector(
+      camera.position,
+      positionVelocity.current,
+      cameraTarget.current,
+      CAMERA_CONFIG.positionSpringTime,
+      delta,
+      change.current,
+      temp.current
+    );
+    dampVector(
+      currentLookAt.current,
+      lookAtVelocity.current,
+      lookAtTarget.current,
+      CAMERA_CONFIG.lookAtSpringTime,
+      delta,
+      change.current,
+      temp.current
+    );
 
-    // 1. Inertial Parallax Tracking with dampening
-    const factor = CAMERA_CONFIG.parallaxStrength;
-    currentParallax.current.x +=
-      (mousePosition.current.x * factor * 60 - currentParallax.current.x) *
-      (0.04 * delta * 60);
-    currentParallax.current.y +=
-      (mousePosition.current.y * factor * 60 - currentParallax.current.y) *
-      (0.04 * delta * 60);
+    parallaxTarget.current.set(
+      mousePosition.current.x * CAMERA_CONFIG.parallaxStrength,
+      mousePosition.current.y * CAMERA_CONFIG.parallaxStrength * 0.7,
+      0
+    );
+    dampVector(
+      parallax.current,
+      parallaxVelocity.current,
+      parallaxTarget.current,
+      CAMERA_CONFIG.parallaxSpringTime,
+      delta,
+      change.current,
+      temp.current
+    );
 
-    // 2. Drone Multi-Axis Idle Sway & Breathing (Never completely frozen)
-    const driftSpeed = CAMERA_CONFIG.idleDriftSpeed;
-    const driftX =
-      Math.sin(time * driftSpeed) * CAMERA_CONFIG.idleDriftAmplitude.x;
-    const driftY =
-      Math.cos(time * driftSpeed * 0.7) * CAMERA_CONFIG.idleDriftAmplitude.y;
-    const driftZ =
-      Math.sin(time * driftSpeed * 0.5) * CAMERA_CONFIG.idleDriftAmplitude.z;
+    const elapsed = clock.getElapsedTime();
+    const drift = CAMERA_CONFIG.idleDriftAmplitude;
+    lookAtWithIdle.copy(currentLookAt.current).add(parallax.current);
+    lookAtWithIdle.x += Math.sin(elapsed * CAMERA_CONFIG.idleDriftSpeed) * drift.x * 0.5;
+    lookAtWithIdle.y += Math.cos(elapsed * CAMERA_CONFIG.idleDriftSpeed * 0.8) * drift.y * 0.5;
+    lookAtWithIdle.z += Math.sin(elapsed * CAMERA_CONFIG.idleDriftSpeed * 0.5) * drift.z * 0.5;
+    camera.lookAt(lookAtWithIdle);
 
-    // Apply subtle drone roll on z-axis
-    const droneRoll =
-      Math.sin(time * 0.25) * 0.005 + currentParallax.current.x * -0.015;
-    camera.rotation.z = droneRoll;
-
-    // 3. Apply target lookAt with continuous inertial sway
-    vLookAt.copy(lookAtTarget.current);
-    vLookAt.x += currentParallax.current.x + driftX * 0.5;
-    vLookAt.y += currentParallax.current.y + driftY * 0.5;
-    vLookAt.z += driftZ * 0.5;
-
-    camera.lookAt(vLookAt);
+    if (
+      camera.position.distanceToSquared(cameraTarget.current) < 0.0009 &&
+      lookAtVelocity.current.lengthSq() < 0.0004 &&
+      positionVelocity.current.lengthSq() < 0.0004
+    ) {
+      const nextWaypoint = route.current.shift();
+      if (nextWaypoint && route.current.length > 0) {
+        const waypoint = route.current[0];
+        cameraTarget.current.fromArray(waypoint.position);
+        lookAtTarget.current.fromArray(waypoint.lookAt);
+      } else if (nextWaypoint) {
+        setTransitioning(false);
+      }
+    }
   });
 
   return null;

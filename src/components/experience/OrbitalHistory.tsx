@@ -3,18 +3,25 @@
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useAppStore } from "@/store/useAppStore";
+import { useResponsiveViewport } from "@/hooks/useResponsiveViewport";
 import { EXPERIENCE_DATA } from "@/data/experience";
-import type { Group } from "three";
+import type { Group, Mesh } from "three";
 import {
   matTitaniumHull,
   matBrushedAluminum,
   matCarbonFiber,
   matDarkPanel,
   matTrussAccent,
-  matStructuralRib,
+  matCommsMast,
+  matRadarDish,
   matCyanEmissive,
   matCyanEmissiveLow,
-  matWarmWhiteWireframe,
+  matRedBeacon,
+  matCyanBeacon,
+  geoSpireMast,
+  geoParabolicDishLarge,
+  geoTransceiverArray,
+  geoBeacon,
 } from "@/lib/SharedMaterials";
 
 export function OrbitalHistory() {
@@ -23,12 +30,16 @@ export function OrbitalHistory() {
     (state) => state.selectedMilestoneYear
   );
   const selectMilestone = useAppStore((state) => state.selectMilestone);
+  const { profile } = useResponsiveViewport();
 
   const isExperienceActive = currentState === "EXPERIENCE";
 
   const groupRef = useRef<Group>(null);
   const chronologyRingRef = useRef<Group>(null);
   const magneticBearingRef = useRef<Group>(null);
+  const commsSpireRef = useRef<Group>(null);
+  const largeDishRef = useRef<Mesh>(null);
+  const beaconRef = useRef<Mesh>(null);
   const targetRotationZ = useRef(0);
 
   // Map 5 milestone positions evenly along the 360-deg ring
@@ -43,13 +54,14 @@ export function OrbitalHistory() {
   useFrame(({ clock }, delta) => {
     const elapsed = clock.getElapsedTime();
 
-    // 1. Structural micro-sway
+    // 1. Structural micro-sway & adaptive scale
     if (groupRef.current) {
       groupRef.current.position.y = 0.2 + Math.sin(elapsed * 0.3) * 0.03;
+      const targetScale = isExperienceActive ? 1.0 : profile.heroScale;
+      groupRef.current.scale.set(targetScale, targetScale, targetScale);
     }
 
     // 2. Smoothly rotate Chronology Ring to align the active milestone node to top inspection position
-    // Step angle = 2 * PI / 5 = 72 degrees
     const stepAngle = (Math.PI * 2) / EXPERIENCE_DATA.length;
     targetRotationZ.current = -(activeIndex * stepAngle) + Math.PI / 2;
 
@@ -63,38 +75,79 @@ export function OrbitalHistory() {
     if (magneticBearingRef.current) {
       magneticBearingRef.current.rotation.z += delta * 0.1;
     }
+
+    // 4. Communications Spire Slow Azimuth Tracking
+    if (commsSpireRef.current) {
+      commsSpireRef.current.rotation.y = Math.sin(elapsed * 0.15) * 0.25;
+    }
+    if (largeDishRef.current) {
+      largeDishRef.current.rotation.x =
+        Math.PI / 4 + Math.sin(elapsed * 0.2) * 0.1;
+    }
+
   });
 
   return (
     <group ref={groupRef} position={[14.5, 0.2, -0.8]}>
-      {/* ============================================================ */}
-      {/* DEDICATED SECTOR LIGHTING (Cinematic Specular & Rim Glint)  */}
-      {/* ============================================================ */}
-      {isExperienceActive && (
-        <>
-          <pointLight
-            position={[0, 1.5, 3.0]}
-            intensity={12.0}
-            color="#ffffff"
-            distance={10}
-          />
-          <pointLight
-            position={[-2.5, 0, 1.5]}
-            intensity={8.0}
-            color="#e0aaff"
-            distance={8}
-          />
-          <pointLight
-            position={[2.5, -1.0, -1.0]}
-            intensity={6.0}
-            color="#00e5ff"
-            distance={8}
-          />
-        </>
-      )}
+      {/* Dedicated Sector Lighting (Permanent stable fill) */}
+      <pointLight
+        position={[0, 1.5, 3.0]}
+        intensity={2.5}
+        color="#ffffff"
+        distance={10}
+      />
+      <pointLight
+        position={[-2.5, 0, 1.5]}
+        intensity={2.0}
+        color="#e0aaff"
+        distance={8}
+      />
+      <pointLight
+        position={[2.5, -1.0, -1.0]}
+        intensity={1.5}
+        color="#00e5ff"
+        distance={8}
+      />
 
       {/* ============================================================ */}
-      {/* 1. STRUCTURAL STATION MOUNTING TRUSSES & MAGNETIC BEARINGS   */}
+      {/* 1. TALL COMMUNICATIONS SPIRE & DEEP SPACE PARABOLIC DISH     */}
+      {/* (Distinct Vertical Communications Tower Silhouette)           */}
+      {/* ============================================================ */}
+      <group ref={commsSpireRef} position={[2.6, 1.2, -0.4]}>
+        {/* Tall Vertical Lattice Spire Mast */}
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <primitive object={geoSpireMast} attach="geometry" />
+          <primitive object={matCommsMast} attach="material" />
+        </mesh>
+
+        {/* Large Parabolic Deep Space Relay Dish */}
+        <mesh
+          ref={largeDishRef}
+          position={[0.4, 2.2, 0.3]}
+          rotation={[Math.PI / 4, 0, -0.2]}
+          castShadow
+        >
+          <primitive object={geoParabolicDishLarge} attach="geometry" />
+          <primitive object={matRadarDish} attach="material" />
+        </mesh>
+
+        {/* High-Gain Transceiver Array Pods */}
+        {[-0.3, 0.3].map((x, i) => (
+          <mesh key={i} position={[x, 0.8, 0]} castShadow>
+            <primitive object={geoTransceiverArray} attach="geometry" />
+            <primitive object={matDarkPanel} attach="material" />
+          </mesh>
+        ))}
+
+        {/* Spire Peak Aviation Beacon Strobe */}
+        <mesh ref={beaconRef} position={[0, 4.2, 0]}>
+          <primitive object={geoBeacon} attach="geometry" />
+          <primitive object={matRedBeacon} attach="material" />
+        </mesh>
+      </group>
+
+      {/* ============================================================ */}
+      {/* 2. STRUCTURAL STATION MOUNTING TRUSSES & MAGNETIC BEARINGS   */}
       {/* ============================================================ */}
       {/* Heavy Station Foundation Base */}
       <mesh position={[0, -2.5, 0]} castShadow receiveShadow>
@@ -127,21 +180,12 @@ export function OrbitalHistory() {
         );
       })}
 
-      {/* Top Suspended Structural Beam & Girders */}
+      {/* Top Suspended Structural Beam */}
       <group position={[0, 2.4, 0]}>
         <mesh castShadow>
           <cylinderGeometry args={[1.6, 1.3, 0.3, 24]} />
           <primitive object={matTitaniumHull} attach="material" />
         </mesh>
-        {[0, 1, 2, 3, 4, 5].map((i) => {
-          const angle = (i * Math.PI) / 3;
-          return (
-            <mesh key={i} position={[0, 0.18, 0]} rotation={[0, angle, 0]}>
-              <boxGeometry args={[1.9, 0.12, 0.03]} />
-              <primitive object={matStructuralRib} attach="material" />
-            </mesh>
-          );
-        })}
       </group>
 
       {/* Magnetic Bearing Stabilizer Rings */}
@@ -150,25 +194,13 @@ export function OrbitalHistory() {
           <torusGeometry args={[2.1, 0.04, 16, 64]} />
           <primitive object={matTrussAccent} attach="material" />
         </mesh>
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-          const angle = (i * Math.PI) / 4;
-          return (
-            <mesh
-              key={i}
-              position={[Math.cos(angle) * 2.1, Math.sin(angle) * 2.1, 0]}
-            >
-              <boxGeometry args={[0.12, 0.12, 0.16]} />
-              <primitive object={matDarkPanel} attach="material" />
-            </mesh>
-          );
-        })}
       </group>
 
       {/* ============================================================ */}
-      {/* 2. THE MONUMENTAL ROTATING CHRONOLOGY RING                   */}
+      {/* 3. THE MONUMENTAL ROTATING CHRONOLOGY RING                   */}
       {/* ============================================================ */}
       <group ref={chronologyRingRef} position={[0, 0, 0]}>
-        {/* Main Titanium Chronology Track (Radius 1.85) */}
+        {/* Main Titanium Chronology Track */}
         <mesh castShadow>
           <torusGeometry args={[1.85, 0.06, 24, 96]} />
           <primitive object={matTitaniumHull} attach="material" />
@@ -180,39 +212,26 @@ export function OrbitalHistory() {
           <primitive object={matCyanEmissive} attach="material" />
         </mesh>
 
-        {/* Outer Ribbed Armor Track */}
-        <mesh>
-          <torusGeometry args={[1.89, 0.02, 16, 64]} />
-          <primitive object={matBrushedAluminum} attach="material" />
-        </mesh>
-
         {/* Central Navigational Gyro Hub */}
         <mesh castShadow>
           <cylinderGeometry args={[0.4, 0.4, 0.6, 24]} />
           <primitive object={matTitaniumHull} attach="material" />
         </mesh>
-        {/* Optical Navigation Kernel replacing generic wireframe */}
+
+        {/* Optical Navigation Kernel */}
         <mesh>
           <icosahedronGeometry args={[0.24, 0]} />
           <meshStandardMaterial
             color="#00e5ff"
             metalness={0.9}
             roughness={0.1}
-            envMapIntensity={2.0}
             emissive="#00e5ff"
             emissiveIntensity={0.5}
             flatShading
           />
         </mesh>
-        {/* Mechanical retaining ring for the kernel */}
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.3, 0.04, 16, 48]} />
-          <primitive object={matCarbonFiber} attach="material" />
-        </mesh>
 
-        {/* ------------------------------------------------------------ */}
-        {/* 5 MILESTONE NODES (2022, 2023, 2024, 2025, FUTURE)           */}
-        {/* ------------------------------------------------------------ */}
+        {/* 5 MILESTONE NODES (2022, 2023, 2024, 2025, FUTURE) */}
         {EXPERIENCE_DATA.map((milestone, index) => {
           const angle = (index * (Math.PI * 2)) / EXPERIENCE_DATA.length;
           const x = Math.cos(angle) * 1.85;
@@ -245,12 +264,6 @@ export function OrbitalHistory() {
                     isSelected ? (isExperienceActive ? 2.5 : 1.2) : 0.2
                   }
                 />
-              </mesh>
-
-              {/* Radial Structural Spoke Connecting Node to Hub */}
-              <mesh position={[-0.8, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.015, 0.015, 1.5, 8]} />
-                <primitive object={matTrussAccent} attach="material" />
               </mesh>
             </group>
           );

@@ -1,7 +1,8 @@
 import { DESIGN_SYSTEM } from "@/DESIGN_SYSTEM";
 import type { ApplicationState, CameraTarget } from "@/types";
+import type { ViewportProfile } from "./viewport";
 
-export const CAMERA_TARGETS: Record<ApplicationState, CameraTarget> = {
+export const BASE_CAMERA_TARGETS: Record<ApplicationState, CameraTarget> = {
   BOOT: {
     position: [-15.2, 0.3, 4.5],
     lookAt: [-14.0, 0.1, -0.6],
@@ -58,17 +59,42 @@ export const CAMERA_TARGETS: Record<ApplicationState, CameraTarget> = {
   },
 };
 
-export const CAMERA_WAYPOINTS = CAMERA_TARGETS;
+export const CAMERA_TARGETS = BASE_CAMERA_TARGETS;
+export const CAMERA_WAYPOINTS = BASE_CAMERA_TARGETS;
+
+/** Compute responsive camera target dynamically adjusting for viewport profile */
+export function getResponsiveCameraTarget(
+  state: ApplicationState,
+  profile: ViewportProfile
+): CameraTarget {
+  const base = BASE_CAMERA_TARGETS[state] || BASE_CAMERA_TARGETS.MISSION_CONTROL;
+  const distMult = profile.cameraDistanceMultiplier;
+  const durMult = profile.transitionDurationMultiplier;
+
+  return {
+    position: [
+      base.position[0],
+      base.position[1] + profile.yOffset,
+      base.position[2] * distMult,
+    ],
+    lookAt: [base.lookAt[0], base.lookAt[1], base.lookAt[2]],
+    duration: base.duration * durMult,
+    easing: base.easing,
+  };
+}
 
 export const CAMERA_CONFIG = {
-  fov: 45,
-  near: 0.1,
-  far: 1000,
+  fov: 44,
+  near: 0.35,
+  far: 280,
+  positionSpringTime: 0.82,
+  lookAtSpringTime: 0.62,
+  parallaxSpringTime: 0.4,
   idleDriftAmplitude: {
-    x: 0.1,
-    y: 0.05,
-    z: 0.03,
+    x: 0.12,
+    y: 0.08,
+    z: 0.04,
   },
-  idleDriftSpeed: 0.3,
-  parallaxStrength: 0.0006,
+  idleDriftSpeed: 0.35,
+  parallaxStrength: 0.11,
 } as const;

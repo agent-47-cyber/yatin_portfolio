@@ -75,30 +75,25 @@ export function Archive() {
   return (
     <group ref={machineGroupRef} position={[1.4, -12, -0.6]}>
       {/* ============================================================ */}
-      {/* DEDICATED SECTOR LIGHTING (Cinematic Specular & Rim Glint)  */}
-      {/* ============================================================ */}
-      {isVaultActive && (
-        <>
-          <pointLight
-            position={[0, 1.0, 3.2]}
-            intensity={12.0}
-            color="#ffffff"
-            distance={10}
-          />
-          <pointLight
-            position={[-2.5, 0, 1.5]}
-            intensity={8.0}
-            color="#00e5ff"
-            distance={8}
-          />
-          <pointLight
-            position={[2.5, -1.0, -1.0]}
-            intensity={6.0}
-            color="#00e5ff"
-            distance={8}
-          />
-        </>
-      )}
+      {/* Dedicated Sector Lighting (Permanent stable fill) */}
+      <pointLight
+        position={[0, 1.0, 3.2]}
+        intensity={2.5}
+        color="#ffffff"
+        distance={10}
+      />
+      <pointLight
+        position={[-2.5, 0, 1.5]}
+        intensity={2.0}
+        color="#00e5ff"
+        distance={8}
+      />
+      <pointLight
+        position={[2.5, -1.0, -1.0]}
+        intensity={1.5}
+        color="#00e5ff"
+        distance={8}
+      />
 
       {/* ============================================================ */}
       {/* 1. MASSIVE TITANIUM FOUNDATION BASE & HYDRAULIC PYLONS       */}

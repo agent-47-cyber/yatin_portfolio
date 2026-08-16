@@ -21,6 +21,8 @@ interface PerformanceStoreState {
 }
 
 const initialTier = PERFORMANCE_CONFIG.tiers.high;
+let lowFpsSamples = 0;
+let recoverySamples = 0;
 
 export const usePerformanceStore = create<PerformanceStoreState>((set, get) => ({
   fps: 60,
@@ -42,12 +44,25 @@ export const usePerformanceStore = create<PerformanceStoreState>((set, get) => (
 
     const { degradationThresholds, recoveryThreshold } = PERFORMANCE_CONFIG;
 
-    if (fps < degradationThresholds.minimal) {
-      get().setQualityTier("low");
-    } else if (fps < degradationThresholds.dpr) {
-      get().setQualityTier("medium");
-    } else if (fps >= recoveryThreshold && get().qualityTier !== "high") {
-      get().setQualityTier("high");
+    if (fps < degradationThresholds.dpr) {
+      lowFpsSamples += 1;
+      recoverySamples = 0;
+      if (lowFpsSamples >= PERFORMANCE_CONFIG.degradationSamples) {
+        get().setQualityTier(
+          fps < degradationThresholds.minimal ? "low" : "medium"
+        );
+        lowFpsSamples = 0;
+      }
+    } else if (fps >= recoveryThreshold) {
+      recoverySamples += 1;
+      lowFpsSamples = 0;
+      if (recoverySamples >= PERFORMANCE_CONFIG.recoverySamples) {
+        get().setQualityTier("high");
+        recoverySamples = 0;
+      }
+    } else {
+      lowFpsSamples = 0;
+      recoverySamples = 0;
     }
   },
 

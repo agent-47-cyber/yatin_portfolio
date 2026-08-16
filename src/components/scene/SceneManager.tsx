@@ -13,30 +13,45 @@ import { AssetManager } from "@/lib/assets";
 export function SceneManager() {
   const { gl, scene, camera } = useThree();
   const hasCompiledRef = useRef(false);
+  const warmupCompleteRef = useRef(false);
   const frameCountRef = useRef(0);
 
   useEffect(() => {
     if (hasCompiledRef.current) return;
+    let cancelled = false;
 
-    try {
-      // 1. Precompile all scene shaders and materials
-      gl.compile(scene, camera);
+    const warmup = async () => {
+      // Let the complete persistent scene mount before compiling it.
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      if (cancelled) return;
+
+      try {
+        await gl.compileAsync(scene, camera);
+      } catch (error) {
+        // compileAsync can reject on older drivers; compile still seeds the cache.
+        console.warn("[SceneManager] Asynchronous shader warmup notice:", error);
+        gl.compile(scene, camera);
+      }
+
+      if (cancelled) return;
       hasCompiledRef.current = true;
+      warmupCompleteRef.current = true;
+      AssetManager.markLoaded("shader_compilation");
+      AssetManager.markLoaded("materials_verified");
+      AssetManager.markLoaded("topology_mounted");
+    };
 
-      AssetManager.markLoaded("shader_compilation");
-      AssetManager.markLoaded("materials_verified");
-      AssetManager.markLoaded("topology_mounted");
-    } catch (e) {
-      console.warn("[SceneManager] Shader precompilation notice:", e);
-      AssetManager.markLoaded("shader_compilation");
-      AssetManager.markLoaded("materials_verified");
-      AssetManager.markLoaded("topology_mounted");
-    }
+    void warmup();
+
+    return () => {
+      cancelled = true;
+    };
   }, [gl, scene, camera]);
 
-  // Wait for 2 successful GPU frames before confirming GPU frame readiness
+  // Confirm two complete rendered frames after program compilation, so the
+  // loading UI cannot uncover a scene while the primary shaders are pending.
   useFrame(() => {
-    if (frameCountRef.current < 2) {
+    if (warmupCompleteRef.current && frameCountRef.current < 2) {
       frameCountRef.current += 1;
       if (frameCountRef.current >= 2) {
         AssetManager.markLoaded("gpu_frame_ready");

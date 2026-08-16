@@ -78,17 +78,15 @@ export function OrbitalHistoryContent() {
                       <button
                         key={milestone.id}
                         onClick={() => selectMilestone(milestone.year)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-sm font-mono-system text-left transition-all duration-200 focus:outline-none ${
-                          isSelected
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-sm font-mono-system text-left transition-all duration-200 focus:outline-none ${isSelected
                             ? "bg-[#e0aaff]/15 border border-[#e0aaff]/50 text-[#f0ece4] shadow-[0_0_12px_rgba(224,170,255,0.2)]"
                             : "border border-[hsla(0,0%,100%,0.05)] hover:border-[hsla(0,0%,100%,0.15)] text-[#8a8a8e] hover:text-[#f0ece4] bg-[#12141c]/40"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2">
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              isSelected ? "bg-[#e0aaff]" : "bg-[#8a8a8e]/40"
-                            }`}
+                            className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-[#e0aaff]" : "bg-[#8a8a8e]/40"
+                              }`}
                           />
                           <span className="text-[11px] font-bold">
                             {milestone.year}

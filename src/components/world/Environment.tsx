@@ -1,34 +1,48 @@
 "use client";
 
-import { useAppStore } from "@/store/useAppStore";
 import { DESIGN_SYSTEM } from "@/DESIGN_SYSTEM";
 
 export function Environment() {
-  const currentState = useAppStore((state) => state.currentState);
-
-  // Dynamic atmospheric fog density based on sector
-  let fogColor: string = DESIGN_SYSTEM.colors.obsidian;
-  let fogNear = 15;
-  let fogFar = 160;
-
-  if (currentState === "ABOUT") {
-    fogColor = "#0a0808";
-    fogNear = 8;
-    fogFar = 60;
-  } else if (currentState === "PROJECTS" || currentState === "PROJECT_DETAIL") {
-    fogColor = "#030406";
-    fogNear = 6;
-    fogFar = 50;
-  } else if (currentState === "EXPERIENCE") {
-    fogColor = "#04060e";
-    fogNear = 8;
-    fogFar = 70;
-  }
-
   return (
     <>
-      <color attach="background" args={[fogColor]} />
-      <fog attach="fog" args={[fogColor, fogNear, fogFar]} />
+      {/* Permanent Pure Obsidian Deep Space Background (Zero Fog Dimming) */}
+      <color attach="background" args={[DESIGN_SYSTEM.colors.obsidian]} />
+
+      {/* Distant Cosmic Backdrop Elements at ~3% opacity for subtle scale */}
+      <group position={[0, -10, -90]}>
+        {/* Distant Industrial Silhouettes / Superstructure Ring */}
+        <mesh rotation={[0, 0, 0.4]}>
+          <torusGeometry args={[85, 0.4, 8, 64]} />
+          <meshBasicMaterial
+            color="#00e5ff"
+            transparent
+            opacity={0.025}
+            depthWrite={false}
+          />
+        </mesh>
+
+        {/* Distant Structural Truss Lattice Spire 1 */}
+        <mesh position={[-45, 15, -20]} rotation={[0, 0, -0.15]}>
+          <cylinderGeometry args={[0.08, 0.25, 45, 6]} />
+          <meshBasicMaterial
+            color="#f0ece4"
+            transparent
+            opacity={0.03}
+            depthWrite={false}
+          />
+        </mesh>
+
+        {/* Distant Structural Truss Lattice Spire 2 */}
+        <mesh position={[50, 18, -25]} rotation={[0, 0, 0.2]}>
+          <cylinderGeometry args={[0.08, 0.25, 50, 6]} />
+          <meshBasicMaterial
+            color="#f0ece4"
+            transparent
+            opacity={0.03}
+            depthWrite={false}
+          />
+        </mesh>
+      </group>
     </>
   );
 }

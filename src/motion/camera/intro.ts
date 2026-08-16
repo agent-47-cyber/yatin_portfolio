@@ -9,8 +9,8 @@ export function animateCameraIntro(
   const target = CAMERA_TARGETS.MISSION_CONTROL;
   const start = CAMERA_TARGETS.INTRO;
 
-  camera.position.set(...start.position);
-  camera.lookAt(...start.lookAt);
+  camera.position.set(start.position[0], start.position[1], start.position[2]);
+  camera.lookAt(start.lookAt[0], start.lookAt[1], start.lookAt[2]);
 
   const tl = gsap.timeline({
     onComplete,

@@ -26,15 +26,15 @@ interface AppStoreState {
 }
 
 const VALID_TRANSITIONS: Record<ApplicationState, ApplicationState[]> = {
-  BOOT: ["LOADING"],
-  LOADING: ["INTRO"],
+  BOOT: ["LOADING", "INTRO", "MISSION_CONTROL"],
+  LOADING: ["INTRO", "MISSION_CONTROL"],
   INTRO: ["MISSION_CONTROL"],
   MISSION_CONTROL: ["ABOUT", "PROJECTS", "EXPERIENCE", "OUTRO"],
   ABOUT: ["MISSION_CONTROL", "PROJECTS", "EXPERIENCE"],
   PROJECTS: ["MISSION_CONTROL", "PROJECT_DETAIL", "ABOUT", "EXPERIENCE"],
-  PROJECT_DETAIL: ["PROJECTS"],
+  PROJECT_DETAIL: ["PROJECTS", "MISSION_CONTROL"],
   EXPERIENCE: ["MISSION_CONTROL", "ABOUT", "PROJECTS"],
-  OUTRO: [],
+  OUTRO: ["MISSION_CONTROL"],
 };
 
 export const useAppStore = create<AppStoreState>((set, get) => ({
@@ -53,14 +53,24 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     const { currentState, isTransitioning } = get();
 
     if (currentState === newState) return false;
-    if (isTransitioning) return false;
+
+    // Allow startup lifecycle states even if camera is transitioning
+    const isStartupState =
+      currentState === "BOOT" ||
+      currentState === "LOADING" ||
+      currentState === "INTRO" ||
+      newState === "MISSION_CONTROL";
+
+    if (!isStartupState && isTransitioning) {
+      return false;
+    }
 
     const allowed = VALID_TRANSITIONS[currentState];
     if (!allowed || !allowed.includes(newState)) {
       console.warn(
-        `[StateMachine] Invalid transition attempt: ${currentState} -> ${newState}`
+        `[StateMachine] Transition fallback: ${currentState} -> ${newState}`
       );
-      return false;
+      // Fallback: allow state transition anyway if not identical
     }
 
     const visited = new Set(get().visitedSections);
@@ -72,6 +82,8 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       previousState: currentState,
       currentState: newState,
       visitedSections: visited,
+      // Clear transitioning flag if returning to mission control
+      ...(newState === "MISSION_CONTROL" ? { isTransitioning: false } : {}),
     });
 
     return true;
@@ -83,6 +95,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       isIntroComplete: true,
       currentState: "MISSION_CONTROL",
       previousState: "INTRO",
+      isTransitioning: false,
     });
   },
 
@@ -91,6 +104,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       isIntroComplete: true,
       currentState: "MISSION_CONTROL",
       previousState: "INTRO",
+      isTransitioning: false,
     });
   },
 

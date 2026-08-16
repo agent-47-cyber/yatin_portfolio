@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useAdaptiveQuality } from "@/hooks/useAdaptiveQuality";
-import { Object3D, type InstancedMesh } from "three";
+import { Object3D, type Group, type InstancedMesh } from "three";
 import {
   matStarParticle,
   matDustParticle,
@@ -19,6 +19,8 @@ export function Particles() {
 
   const starMeshRef = useRef<InstancedMesh>(null);
   const dustMeshRef = useRef<InstancedMesh>(null);
+  const starGroupRef = useRef<Group>(null);
+  const dustGroupRef = useRef<Group>(null);
 
   // Background Starfield Coordinates
   const starData = useMemo(() => {
@@ -57,52 +59,63 @@ export function Particles() {
     return data;
   }, []);
 
-  // Per-frame multi-plane particle drift (Zero allocations)
+  // Upload immutable instance transforms only when the quality tier changes.
+  // The previous implementation rewrote over 2,000 matrices every animation
+  // frame, which consumed GPU bandwidth without a perceptible visual benefit.
+  useEffect(() => {
+    if (!starMeshRef.current) return;
+    starData.forEach((star, i) => {
+      dummy.position.set(star.x, star.y, star.z);
+      dummy.scale.setScalar(star.scale);
+      dummy.updateMatrix();
+      starMeshRef.current?.setMatrixAt(i, dummy.matrix);
+    });
+    starMeshRef.current.instanceMatrix.needsUpdate = true;
+  }, [starData]);
+
+  useEffect(() => {
+    if (!dustMeshRef.current) return;
+    dustData.forEach((dust, i) => {
+      dummy.position.set(dust.x, dust.y, dust.z);
+      dummy.scale.setScalar(dust.scale);
+      dummy.updateMatrix();
+      dustMeshRef.current?.setMatrixAt(i, dummy.matrix);
+    });
+    dustMeshRef.current.instanceMatrix.needsUpdate = true;
+  }, [dustData]);
+
+  // Per-frame group motion preserves ambient life without per-instance uploads.
   useFrame(({ clock }) => {
     const time = clock.getElapsedTime();
 
-    // 1. Background Stars Slow Rotation
-    if (starMeshRef.current) {
-      starData.forEach((star, i) => {
-        const pulse = Math.sin(time * star.speed * 20 + star.phase) * 0.3 + 1;
-        dummy.position.set(star.x, star.y, star.z);
-        dummy.scale.setScalar(star.scale * pulse);
-        dummy.updateMatrix();
-        starMeshRef.current?.setMatrixAt(i, dummy.matrix);
-      });
-      starMeshRef.current.instanceMatrix.needsUpdate = true;
-      starMeshRef.current.rotation.y = time * 0.003;
+    if (starGroupRef.current) {
+      starGroupRef.current.rotation.y = time * 0.003;
     }
-
-    // 2. Foreground Floating Dust Parallax
-    if (dustMeshRef.current) {
-      dustData.forEach((dust, i) => {
-        const dy = Math.sin(time * dust.speed + dust.phase) * 0.4;
-        const dx = Math.cos(time * dust.speed * 0.8 + dust.phase) * 0.3;
-        dummy.position.set(dust.x + dx, dust.y + dy, dust.z);
-        dummy.scale.setScalar(dust.scale);
-        dummy.updateMatrix();
-        dustMeshRef.current?.setMatrixAt(i, dummy.matrix);
-      });
-      dustMeshRef.current.instanceMatrix.needsUpdate = true;
+    if (dustGroupRef.current) {
+      dustGroupRef.current.position.y = Math.sin(time * 0.08) * 0.18;
+      dustGroupRef.current.rotation.y = Math.sin(time * 0.03) * 0.025;
     }
   });
 
   return (
     <group>
       {/* Background Starfield */}
-      <instancedMesh
-        ref={starMeshRef}
-        args={[geoStarSphere, matStarParticle, starData.length]}
-        frustumCulled={false}
-      />
+      <group ref={starGroupRef}>
+        <instancedMesh
+          ref={starMeshRef}
+          args={[geoStarSphere, matStarParticle, starData.length]}
+          frustumCulled={false}
+        />
+      </group>
 
       {/* Foreground Ambient Space Dust */}
-      <instancedMesh
-        ref={dustMeshRef}
-        args={[geoDustSphere, matDustParticle, dustData.length]}
-        frustumCulled={false}
-      />
+      <group ref={dustGroupRef}>
+        <instancedMesh
+          ref={dustMeshRef}
+          args={[geoDustSphere, matDustParticle, dustData.length]}
+          frustumCulled={false}
+        />
+      </group>
     </group>
   );
 }
